@@ -1,0 +1,47 @@
+{
+"manifest_version": 3,
+"name": "CoMemo - Web Memo Share",
+"version": "1.0.0",
+"description": "Webページにメモを追加し、URLで共有できる拡張機能",
+"permissions": [
+	"storage",
+	"activeTab",
+	"scripting",
+	"contextMenus"
+],
+"host_permissions": [
+	"<all_urls>"
+],
+"action": {
+	"default_icon": {
+	"16": "assets/icons/icon_16px.png",
+	"32": "assets/icons/icon_32px.png",
+	"48": "assets/icons/icon_48px.png",
+	"128": "assets/icons/icon_128px.png"
+	},
+	"default_title": "CoMemoパネルを開く"
+},
+"icons": {
+	"16": "assets/icons/icon_16px.png",
+	"32": "assets/icons/icon_32px.png",
+	"48": "assets/icons/icon_48px.png",
+	"128": "assets/icons/icon_128px.png"
+},
+"content_scripts": [
+	{
+	"matches": ["<all_urls>"],
+	"js": ["lib/supabase.min.js", "src/js/config.js", "src/js/content.js"],
+	"css": ["src/css/content.css"],
+	"run_at": "document_end"
+	}
+],
+"background": {
+	"service_worker": "src/js/background.js"
+},
+"web_accessible_resources": [
+	{
+	"resources": ["assets/icons/*", "assets/fonts/*"],
+	"matches": ["<all_urls>"]
+	}
+]
+}

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cocome - Space Adventure</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 30%, #2d1f4a 60%, #1a1030 100%);
+	font-family: 'Noto Sans JP', sans-serif;
+	overflow: hidden;
+	position: relative;
+}
+
+/* ====== Space Background ====== */
+.space-bg {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+/* Stars */
+.star {
+	position: absolute;
+	border-radius: 50%;
+	background: #fff;
+	animation: twinkle ease-in-out infinite;
+}
+
+.star--small { width: 1px; height: 1px; }
+.star--medium { width: 2px; height: 2px; }
+.star--large { width: 3px; height: 3px; box-shadow: 0 0 6px 1px rgba(255,255,255,0.5); }
+
+.star--blue { background: #a8c0e8; box-shadow: 0 0 4px 1px rgba(168,192,232,0.6); }
+.star--purple { background: #c9b8d9; box-shadow: 0 0 4px 1px rgba(201,184,217,0.6); }
+.star--yellow { background: #f5e6a3; box-shadow: 0 0 4px 1px rgba(245,230,163,0.6); }
+.star--pink { background: #f0c4d4; box-shadow: 0 0 4px 1px rgba(240,196,212,0.6); }
+
+@keyframes twinkle {
+	0%, 100% { opacity: 0.3; transform: scale(1); }
+	50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Shooting stars */
+.shooting-star {
+	position: absolute;
+	width: 100px;
+	height: 2px;
+	background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+	border-radius: 2px;
+	animation: shooting 3s ease-in-out infinite;
+	opacity: 0;
+}
+
+.shooting-star::before {
+	content: '';
+	position: absolute;
+	right: 0;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0 10px 3px rgba(255,255,255,0.8);
+}
+
+@keyframes shooting {
+	0% { transform: translateX(0) translateY(0); opacity: 0; }
+	5% { opacity: 1; }
+	30% { transform: translateX(300px) translateY(150px); opacity: 0; }
+	100% { transform: translateX(300px) translateY(150px); opacity: 0; }
+}
+
+.shooting-star:nth-child(2) { top: 10%; left: 60%; animation-delay: 2s; }
+.shooting-star:nth-child(3) { top: 30%; left: 20%; animation-delay: 5s; }
+.shooting-star:nth-child(4) { top: 50%; left: 70%; animation-delay: 8s; }
+
+/* Nebula glow */
+.nebula {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(60px);
+	opacity: 0.15;
+	animation: nebula-pulse 8s ease-in-out infinite;
+}
+
+.nebula--1 {
+	width: 400px; height: 400px;
+	top: -100px; left: -100px;
+	background: radial-gradient(circle, #c9b8d9 0%, transparent 70%);
+}
+
+.nebula--2 {
+	width: 300px; height: 300px;
+	bottom: -50px; right: -50px;
+	background: radial-gradient(circle, #a8c0e8 0%, transparent 70%);
+	animation-delay: 2s;
+}
+
+.nebula--3 {
+	width: 250px; height: 250px;
+	top: 50%; left: 50%;
+	transform: translate(-50%, -50%);
+	background: radial-gradient(circle, #f0c4d4 0%, transparent 70%);
+	animation-delay: 4s;
+}
+
+@keyframes nebula-pulse {
+	0%, 100% { opacity: 0.1; transform: scale(1); }
+	50% { opacity: 0.2; transform: scale(1.1); }
+}
+
+/* Distant planets */
+.planet {
+	position: absolute;
+	border-radius: 50%;
+	opacity: 0.6;
+}
+
+.planet--1 {
+	width: 60px; height: 60px;
+	top: 15%; right: 10%;
+	background: linear-gradient(135deg, #f0c4d4 0%, #c9b8d9 100%);
+	box-shadow: inset -10px -10px 20px rgba(0,0,0,0.3), 0 0 20px rgba(240,196,212,0.3);
+	animation: planet-float 12s ease-in-out infinite;
+}
+
+.planet--2 {
+	width: 30px; height: 30px;
+	bottom: 20%; left: 8%;
+	background: linear-gradient(135deg, #a8c0e8 0%, #7a9fd4 100%);
+	box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3), 0 0 15px rgba(168,192,232,0.3);
+	animation: planet-float 10s ease-in-out infinite reverse;
+}
+
+/* Saturn-like ring planet */
+.planet--3 {
+	width: 40px; height: 40px;
+	top: 60%; right: 15%;
+	background: linear-gradient(135deg, #f5e6a3 0%, #e8d485 100%);
+	box-shadow: inset -8px -8px 15px rgba(0,0,0,0.2), 0 0 15px rgba(245,230,163,0.3);
+	animation: planet-float 15s ease-in-out infinite;
+}
+
+.planet--3::before {
+	content: '';
+	position: absolute;
+	top: 50%; left: 50%;
+	transform: translate(-50%, -50%) rotateX(70deg);
+	width: 70px; height: 70px;
+	border: 3px solid rgba(245,230,163,0.4);
+	border-radius: 50%;
+}
+
+@keyframes planet-float {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(-15px); }
+}
+
+/* ====== cocome Container ====== */
+.cocome-container {
+	text-align: center;
+	position: relative;
+	z-index: 1;
+}
+
+.cocome-svg {
+	width: 300px;
+	height: 300px;
+	filter: drop-shadow(0 0 30px rgba(255,255,255,0.2));
+}
+
+/* ====== cocome Animations ====== */
+
+/* Body float + sway */
+.cocome-body {
+	animation: cocome-float 3s ease-in-out infinite, cocome-sway 4s ease-in-out infinite;
+	transform-origin: center center;
+}
+
+@keyframes cocome-float {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(-8px); }
+}
+
+@keyframes cocome-sway {
+	0%, 100% { transform: rotate(0deg); }
+	25% { transform: rotate(-2deg); }
+	75% { transform: rotate(2deg); }
+}
+
+/* Left antenna bounce - more bouncy! */
+.cocome-antenna-left {
+	animation: antenna-bounce-left 1.8s ease-in-out infinite;
+	transform-origin: 95px 130px;
+}
+
+@keyframes antenna-bounce-left {
+	0%, 100% { transform: rotate(0deg); }
+	15% { transform: rotate(-12deg); }
+	30% { transform: rotate(8deg); }
+	45% { transform: rotate(-6deg); }
+	60% { transform: rotate(4deg); }
+	80% { transform: rotate(-2deg); }
+}
+
+/* Right antenna bounce - more bouncy! */
+.cocome-antenna-right {
+	animation: antenna-bounce-right 2s ease-in-out infinite;
+	transform-origin: 205px 130px;
+}
+
+@keyframes antenna-bounce-right {
+	0%, 100% { transform: rotate(0deg); }
+	20% { transform: rotate(10deg); }
+	40% { transform: rotate(-8deg); }
+	55% { transform: rotate(6deg); }
+	70% { transform: rotate(-4deg); }
+	85% { transform: rotate(2deg); }
+}
+
+/* Eye blink - smooth */
+.cocome-eyelid-left,
+.cocome-eyelid-right {
+	animation: blink 5s ease-in-out infinite;
+	transform-origin: center;
+}
+
+.cocome-eyelid-right {
+	animation-delay: 0.03s;
+}
+
+@keyframes blink {
+	0%, 38%, 42%, 100% { transform: scaleY(0); }
+	39.5%, 40.5% { transform: scaleY(1); }
+}
+
+/* Arms wave - more dynamic! */
+.cocome-arm-left {
+	animation: arm-wave-left 1.5s ease-in-out infinite;
+	transform-origin: 95px 175px;
+}
+
+@keyframes arm-wave-left {
+	0%, 100% { transform: rotate(0deg); }
+	25% { transform: rotate(-15deg); }
+	50% { transform: rotate(5deg); }
+	75% { transform: rotate(-10deg); }
+}
+
+.cocome-arm-right {
+	animation: arm-wave-right 2s ease-in-out infinite;
+	transform-origin: 205px 175px;
+}
+
+@keyframes arm-wave-right {
+	0%, 100% { transform: rotate(0deg); }
+	30% { transform: rotate(20deg); }
+	60% { transform: rotate(-5deg); }
+	80% { transform: rotate(10deg); }
+}
+
+/* Legs wiggle */
+.cocome-leg-left {
+	animation: leg-wiggle-left 2s ease-in-out infinite;
+	transform-origin: 113px 235px;
+}
+
+@keyframes leg-wiggle-left {
+	0%, 100% { transform: rotate(0deg); }
+	50% { transform: rotate(-8deg); }
+}
+
+.cocome-leg-right {
+	animation: leg-wiggle-right 2.2s ease-in-out infinite;
+	transform-origin: 187px 235px;
+}
+
+@keyframes leg-wiggle-right {
+	0%, 100% { transform: rotate(0deg); }
+	50% { transform: rotate(8deg); }
+}
+
+/* Eyes look around - minimal smooth */
+.cocome-pupil-left,
+.cocome-pupil-right {
+	animation: eyes-drift 15s linear infinite;
+}
+
+@keyframes eyes-drift {
+	0%, 100% { transform: translate(0, 0); }
+	25% { transform: translate(1px, 0); }
+	50% { transform: translate(0, 0); }
+	75% { transform: translate(-0.5px, 0); }
+}
+
+/* Sparkle twinkle */
+.cocome-sparkle {
+	animation: sparkle-twinkle 2s ease-in-out infinite;
+}
+
+.cocome-sparkle:nth-child(2) { animation-delay: 0.3s; }
+.cocome-sparkle:nth-child(3) { animation-delay: 0.6s; }
+.cocome-sparkle:nth-child(4) { animation-delay: 0.9s; }
+
+@keyframes sparkle-twinkle {
+	0%, 100% { opacity: 0.3; transform: scale(0.8); }
+	50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Title */
+.cocome-title {
+	font-family: 'Oooh Baby', cursive;
+	font-size: 48px;
+	color: #fff;
+	text-shadow: 0 0 20px rgba(201,184,217,0.8), 0 0 40px rgba(168,192,232,0.5);
+	margin-top: 16px;
+}
+
+.cocome-subtitle {
+	font-family: 'Noto Sans JP', sans-serif;
+	font-size: 12px;
+	color: rgba(255,255,255,0.6);
+	letter-spacing: 4px;
+	margin-top: 8px;
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Oooh+Baby&family=Noto+Sans+JP:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Space Background -->
+<div class="space-bg" id="space-bg">
+	<!-- Nebulas -->
+	<div class="nebula nebula--1"></div>
+	<div class="nebula nebula--2"></div>
+	<div class="nebula nebula--3"></div>
+
+	<!-- Planets -->
+	<div class="planet planet--1"></div>
+	<div class="planet planet--2"></div>
+	<div class="planet planet--3"></div>
+
+	<!-- Shooting stars -->
+	<div class="shooting-star"></div>
+	<div class="shooting-star"></div>
+	<div class="shooting-star"></div>
+	<div class="shooting-star"></div>
+</div>
+
+<div class="cocome-container">
+	<svg class="cocome-svg" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+		<!-- Background circle (space helmet glass effect) -->
+		<defs>
+			<radialGradient id="helmet-glass" cx="50%" cy="30%" r="60%">
+				<stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
+				<stop offset="100%" stop-color="#e8e8f0" stop-opacity="0.05"/>
+			</radialGradient>
+		</defs>
+		<circle cx="150" cy="150" r="140" fill="url(#helmet-glass)"/>
+		<circle cx="150" cy="150" r="140" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+
+		<!-- Main animated group -->
+		<g class="cocome-body">
+
+			<!-- Left Antenna -->
+			<g class="cocome-antenna-left">
+				<line x1="95" y1="130" x2="85" y2="75" stroke="#c9b8d9" stroke-width="6" stroke-linecap="round"/>
+				<circle cx="85" cy="65" r="12" fill="#c9b8d9"/>
+				<circle cx="85" cy="65" r="6" fill="#b8a8c8" opacity="0.5"/>
+			</g>
+
+			<!-- Right Antenna -->
+			<g class="cocome-antenna-right">
+				<line x1="205" y1="130" x2="215" y2="75" stroke="#a8c0e8" stroke-width="6" stroke-linecap="round"/>
+				<circle cx="215" cy="65" r="12" fill="#a8c0e8"/>
+				<circle cx="215" cy="65" r="6" fill="#98b0d8" opacity="0.5"/>
+			</g>
+
+			<!-- Left Arm -->
+			<g class="cocome-arm-left">
+				<rect x="65" y="168" width="30" height="14" rx="7" fill="#c9b8d9"/>
+				<circle cx="60" cy="175" r="10" fill="#c9b8d9"/>
+			</g>
+
+			<!-- Right Arm -->
+			<g class="cocome-arm-right">
+				<rect x="205" y="168" width="30" height="14" rx="7" fill="#a8c0e8"/>
+				<circle cx="240" cy="175" r="10" fill="#a8c0e8"/>
+			</g>
+
+			<!-- Legs -->
+			<g>
+				<!-- Left Leg -->
+				<g class="cocome-leg-left">
+					<rect x="105" y="235" width="16" height="35" rx="8" fill="#c9b8d9"/>
+					<ellipse cx="113" cy="272" rx="14" ry="8" fill="#c9b8d9"/>
+				</g>
+
+				<!-- Right Leg -->
+				<g class="cocome-leg-right">
+					<rect x="179" y="235" width="16" height="35" rx="8" fill="#a8c0e8"/>
+					<ellipse cx="187" cy="272" rx="14" ry="8" fill="#a8c0e8"/>
+				</g>
+			</g>
+
+			<!-- Main Body (memo pad) -->
+			<rect x="85" y="115" width="130" height="130" rx="24" fill="#f5e6a3"/>
+
+			<!-- Memo wave line (single wavy stroke) -->
+			<g transform="translate(100, 128) scale(0.88, 0.85)">
+				<path d="M1 5.85294C26.6854 -12.2634 39.9547 27.7746 66.8438 6.09053" stroke="#E8D485" stroke-width="2" stroke-linecap="round" fill="none"/>
+				<path d="M55.1372 13.4723C63.8039 22.2655 94.5813 13.8212 111.137 7.24995" stroke="#E8D485" stroke-width="2" stroke-linecap="round" fill="none"/>
+			</g>
+
+			<!-- Face -->
+			<g>
+				<!-- Left Eye -->
+				<ellipse cx="120" cy="175" rx="18" ry="20" fill="white"/>
+				<g class="cocome-pupil-left">
+					<ellipse cx="123" cy="177" rx="10" ry="12" fill="#3d3d3d"/>
+					<circle cx="126" cy="173" r="4" fill="white"/>
+					<circle cx="121" cy="180" r="2" fill="white" opacity="0.7"/>
+				</g>
+				<!-- Left Eyelid (for blink) -->
+				<ellipse class="cocome-eyelid-left" cx="120" cy="175" rx="18" ry="20" fill="#f5e6a3"/>
+
+				<!-- Right Eye -->
+				<ellipse cx="180" cy="175" rx="18" ry="20" fill="white"/>
+				<g class="cocome-pupil-right">
+					<ellipse cx="183" cy="177" rx="10" ry="12" fill="#3d3d3d"/>
+					<circle cx="186" cy="173" r="4" fill="white"/>
+					<circle cx="181" cy="180" r="2" fill="white" opacity="0.7"/>
+				</g>
+				<!-- Right Eyelid (for blink) -->
+				<ellipse class="cocome-eyelid-right" cx="180" cy="175" rx="18" ry="20" fill="#f5e6a3"/>
+
+				<!-- Blush -->
+				<ellipse cx="95" cy="190" rx="12" ry="7" fill="#f5b5c0" opacity="0.5"/>
+				<ellipse cx="205" cy="190" rx="12" ry="7" fill="#f5b5c0" opacity="0.5"/>
+
+				<!-- Smile -->
+				<path d="M 130 205 Q 150 218, 170 205" stroke="#3d3d3d" stroke-width="4" fill="none" stroke-linecap="round"/>
+			</g>
+
+		</g>
+
+		<!-- Sparkles (outside body animation) -->
+		<g>
+			<path class="cocome-sparkle" d="M 55 120 L 60 125 L 55 130 L 50 125 Z" fill="#f5e6a3"/>
+			<path class="cocome-sparkle" d="M 245 110 L 250 115 L 245 120 L 240 115 Z" fill="#c9b8d9"/>
+			<path class="cocome-sparkle" d="M 40 180 L 44 184 L 40 188 L 36 184 Z" fill="#a8c0e8"/>
+			<path class="cocome-sparkle" d="M 260 190 L 264 194 L 260 198 L 256 194 Z" fill="#f5e6a3"/>
+		</g>
+
+	</svg>
+
+	<p class="cocome-title">cocome</p>
+	<p class="cocome-subtitle">SPACE ADVENTURE</p>
+</div>
+
+<script>
+// Generate stars
+(function() {
+	const container = document.getElementById('space-bg');
+	const sizes = ['small', 'medium', 'medium', 'large'];
+	const colors = ['', 'blue', 'purple', 'yellow', 'pink'];
+
+	for (let i = 0; i < 150; i++) {
+		const star = document.createElement('div');
+		const size = sizes[Math.floor(Math.random() * sizes.length)];
+		const color = colors[Math.floor(Math.random() * colors.length)];
+
+		star.className = 'star star--' + size + (color ? ' star--' + color : '');
+		star.style.left = Math.random() * 100 + '%';
+		star.style.top = Math.random() * 100 + '%';
+		star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+		star.style.animationDelay = (Math.random() * -5) + 's';
+
+		container.appendChild(star);
+	}
+})();
+</script>
+
+</body>
+</html>
