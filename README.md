@@ -49,7 +49,7 @@
 ### From Source / ソースから
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/CoMemo.git
+git clone https://github.com/nonsenseblue/Comemo.git
 ```
 
 Then follow the same steps above. / 上記と同じ手順でインストール。
@@ -151,8 +151,10 @@ CoMemo/
 │       └── content.css   # Styles
 ├── docs/
 │   ├── MANUAL.md         # User manual
-│   ├── SPEC.md           # Technical spec
-│   └── schema.sql        # Database schema
+│   ├── schema.sql        # Database schema
+│   ├── lp.html           # Landing page
+│   ├── index.html        # Demo page
+│   └── cocome.html       # Mascot page
 └── scripts/
     └── build-dist.sh     # Build script
 ```
