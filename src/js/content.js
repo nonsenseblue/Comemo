@@ -37,6 +37,9 @@ let selectedShapeId = null;
 // 元に戻す
 let undoStack = [];
 
+// 保存制御
+let saveTimeout = null;
+
 // UI
 let panelElement = null;
 
@@ -184,8 +187,13 @@ async function saveMemoPosition(memo) {
 
 async function saveAllMemos() {
 	await saveToLocal();
+
+	// Supabase保存はdebounce（500ms後に実行）
 	if (supabase) {
-	await saveToSupabase();
+	if (saveTimeout) clearTimeout(saveTimeout);
+	saveTimeout = setTimeout(async () => {
+		await saveToSupabase();
+	}, 500);
 	}
 }
 
@@ -193,6 +201,20 @@ async function saveToSupabase() {
 	if (!supabase) return null;
 
 	try {
+	// 既存のcollectionIdがある場合、Supabaseに存在するか確認
+	if (currentCollectionId) {
+		const { data: existingCollection } = await supabase
+		.from('memo_collections')
+		.select('id')
+		.eq('id', currentCollectionId)
+		.single();
+
+		if (!existingCollection) {
+		currentCollectionId = null;
+		currentShareCode = null;
+		}
+	}
+
 	if (!currentCollectionId) {
 		currentShareCode = generateShareCode();
 		const { data: collection, error: collectionError } = await supabase
@@ -217,8 +239,8 @@ async function saveToSupabase() {
 		const memosToInsert = memos.map(m => ({
 		id: m.id,
 		collection_id: currentCollectionId,
-		position_x: m.position_x,
-		position_y: m.position_y,
+		position_x: Math.round(m.position_x),
+		position_y: Math.round(m.position_y),
 		content: m.content,
 		color: m.color
 		}));
