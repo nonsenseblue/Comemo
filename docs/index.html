@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoMemo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oooh+Baby&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/icons/cocome_300px.png" as="image">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+	--blue: #a8c0e8;
+	--purple: #c9b8d9;
+	--pink: #f0c4d4;
+}
+
+body {
+	font-family: 'Noto Sans JP', sans-serif;
+	background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 50%, var(--pink) 100%);
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	position: relative;
+}
+
+/* ====== Particles ====== */
+.particles {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.particle {
+	position: absolute;
+	border-radius: 50%;
+	animation: drift ease-in-out infinite, twinkle ease-in-out infinite;
+}
+
+@keyframes drift {
+	0% { transform: translate(0, 0); }
+	25% { transform: translate(20px, -30px); }
+	50% { transform: translate(-15px, -50px); }
+	75% { transform: translate(25px, -20px); }
+	100% { transform: translate(0, 0); }
+}
+
+@keyframes twinkle {
+	0%, 100% { opacity: 0.15; }
+	50% { opacity: 0.45; }
+}
+
+/* ====== Center card ====== */
+.intro {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: 0;
+}
+
+/* ====== Ring behind mascot ====== */
+.mascot-ring {
+	position: relative;
+	width: 200px;
+	height: 200px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 8px;
+}
+
+.mascot-ring::before {
+	content: '';
+	position: absolute;
+	inset: -10px;
+	border-radius: 50%;
+	border: 3px dashed rgba(255,255,255,0.3);
+	animation: ring-spin 12s linear infinite;
+}
+
+@keyframes ring-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* mascot image: instant display, then idle */
+.intro-mascot {
+	width: 180px;
+	height: 180px;
+	object-fit: contain;
+	filter: drop-shadow(0 12px 32px rgba(0,0,0,0.15));
+	animation: mascot-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes mascot-pop {
+	0% { opacity: 0; transform: scale(0); }
+	70% { opacity: 1; transform: scale(1.1); }
+	100% { opacity: 1; transform: scale(1); }
+}
+
+.intro-mascot.idle {
+	animation: mascot-idle 3s ease-in-out infinite;
+}
+
+@keyframes mascot-idle {
+	0%, 100% { transform: translateY(0) rotate(0deg); }
+	25% { transform: translateY(-6px) rotate(-2deg); }
+	75% { transform: translateY(-3px) rotate(2deg); }
+}
+
+/* cocome name */
+.intro-name {
+	font-family: 'Oooh Baby', cursive;
+	font-size: 22px;
+	color: rgba(255,255,255,0.85);
+	margin-bottom: 28px;
+	opacity: 0;
+	animation: fade-in 0.5s ease-out 0.3s forwards;
+}
+
+/* divider line */
+.intro-divider {
+	width: 40px;
+	height: 2px;
+	background: rgba(255,255,255,0.4);
+	border: none;
+	border-radius: 2px;
+	margin-bottom: 28px;
+	opacity: 0;
+	animation: fade-in 0.5s ease-out 0.4s forwards;
+}
+
+/* title */
+.intro-title {
+	font-family: 'Oooh Baby', cursive;
+	font-size: clamp(42px, 10vw, 64px);
+	color: #fff;
+	text-shadow: 0 3px 16px rgba(0,0,0,0.1);
+	letter-spacing: 2px;
+	line-height: 1;
+	margin-bottom: 8px;
+	opacity: 0;
+	animation: fade-in 0.5s ease-out 0.5s forwards;
+}
+
+/* subtitle */
+.intro-sub {
+	font-size: clamp(10px, 2.5vw, 13px);
+	color: rgba(255,255,255,0.7);
+	letter-spacing: 5px;
+	margin-bottom: 40px;
+	opacity: 0;
+	animation: fade-in 0.5s ease-out 0.6s forwards;
+}
+
+@keyframes fade-in {
+	to { opacity: 1; }
+}
+
+/* enter button */
+.intro-enter {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 14px 48px;
+	background: rgba(255,255,255,0.18);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border: 2px solid rgba(255,255,255,0.35);
+	border-radius: 40px;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 3px;
+	text-decoration: none;
+	cursor: pointer;
+	opacity: 0;
+	animation: fade-in 0.5s ease-out 0.8s forwards, btn-breathe 3s ease-in-out 1.3s infinite;
+	transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+	position: relative;
+	overflow: hidden;
+}
+
+.intro-enter svg {
+	position: absolute;
+	right: 16px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 16px;
+	height: 16px;
+	stroke: #fff;
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	transition: transform 0.3s;
+}
+
+.intro-enter:hover svg {
+	transform: translateY(-50%) translateX(3px);
+}
+
+.intro-enter:hover {
+	background: rgba(255,255,255,0.3);
+	transform: scale(1.05);
+	box-shadow: 0 8px 32px rgba(255,255,255,0.15);
+}
+
+.intro-enter:active {
+	transform: scale(0.97);
+}
+
+@keyframes btn-breathe {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+	50% { box-shadow: 0 0 20px 3px rgba(255,255,255,0.15); }
+}
+
+/* ripple */
+.intro-enter .ripple {
+	position: absolute;
+	border-radius: 50%;
+	background: rgba(255,255,255,0.35);
+	animation: ripple-out 0.6s ease-out forwards;
+	pointer-events: none;
+}
+
+@keyframes ripple-out {
+	0% { width: 0; height: 0; opacity: 1; }
+	100% { width: 300px; height: 300px; opacity: 0; }
+}
+
+/* exit */
+.intro.leaving {
+	transition: opacity 0.5s, transform 0.5s;
+	opacity: 0;
+	transform: scale(0.95);
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 500px) {
+	.mascot-ring { width: 150px; height: 150px; }
+	.intro-mascot { width: 130px; height: 130px; }
+}
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="intro" id="intro">
+	<div class="mascot-ring">
+		<img src="../assets/icons/cocome_300px.png" alt="cocome" class="intro-mascot" id="mascot">
+	</div>
+	<p class="intro-name">cocome</p>
+	<hr class="intro-divider">
+	<h1 class="intro-title">CoMemo</h1>
+	<p class="intro-sub">WEB MEMO SHARE</p>
+	<a class="intro-enter" id="enterBtn">
+		ENTER
+		<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+	</a>
+</div>
+
+<script>
+// Particles
+(function() {
+	const container = document.getElementById('particles');
+	const colors = ['#fff', '#e8d0f0', '#d0e0f8', '#f0e0c8', '#f8e8f0', '#c8e6c0', '#d0f0d0', '#f5e6a3', '#f0e8c0'];
+	const shapes = ['circle', 'circle', 'circle', 'square', 'triangle', 'diamond'];
+	for (let i = 0; i < 45; i++) {
+		const p = document.createElement('div');
+		p.className = 'particle';
+		const shape = shapes[Math.floor(Math.random() * shapes.length)];
+		const size = Math.random() * 8 + 3;
+		p.style.width = size + 'px';
+		p.style.height = size + 'px';
+		p.style.left = Math.random() * 100 + '%';
+		p.style.top = Math.random() * 100 + '%';
+		p.style.background = colors[Math.floor(Math.random() * colors.length)];
+		if (shape === 'square') {
+			p.style.borderRadius = '2px';
+		} else if (shape === 'triangle') {
+			p.style.borderRadius = '0';
+			p.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+		} else if (shape === 'diamond') {
+			p.style.borderRadius = '0';
+			p.style.clipPath = 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)';
+		}
+		p.style.animationDuration = (Math.random() * 6 + 4) + 's,' + (Math.random() * 3 + 2) + 's';
+		p.style.animationDelay = (Math.random() * -10) + 's';
+		container.appendChild(p);
+	}
+})();
+
+// Mascot: pop -> idle
+const mascot = document.getElementById('mascot');
+mascot.addEventListener('animationend', () => {
+	mascot.classList.add('idle');
+});
+
+// Enter
+const enterBtn = document.getElementById('enterBtn');
+enterBtn.addEventListener('click', (e) => {
+	const rect = enterBtn.getBoundingClientRect();
+	const ripple = document.createElement('span');
+	ripple.className = 'ripple';
+	ripple.style.left = (e.clientX - rect.left - 150) + 'px';
+	ripple.style.top = (e.clientY - rect.top - 150) + 'px';
+	enterBtn.appendChild(ripple);
+
+	document.getElementById('intro').classList.add('leaving');
+	setTimeout(() => { window.location.href = 'lp.html'; }, 500);
+});
+</script>
+
+</body>
+</html>

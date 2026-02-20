@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoMemo - Web Memo Share</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oooh+Baby&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/icons/cocome_300px.png" as="image">
+<link rel="preload" href="../assets/icons/icon_128px.png" as="image">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../src/js/config.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+	--blue: #a8c0e8;
+	--purple: #c9b8d9;
+	--yellow: #f5e6a3;
+	--green: #a8d5a2;
+	--pink: #f0c4d4;
+	--orange: #f5d4a3;
+	--text: #444;
+	--text-light: #666;
+	--bg: #fafbff;
+}
+
+html {
+	scroll-behavior: smooth;
+	background: var(--purple);
+}
+
+body {
+	font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+	color: var(--text);
+	background: var(--bg);
+	line-height: 1.8;
+	overflow-x: hidden;
+	margin: 0;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+/* ====== Scroll Reveal ====== */
+.reveal {
+	opacity: 0;
+	transform: translateY(32px);
+	transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+/* ====== Floating particles ====== */
+.particles {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+.particle {
+	position: absolute;
+	border-radius: 50%;
+}
+/* 上昇 + 横揺れ */
+.particle--drift {
+	animation: drift linear infinite, sway ease-in-out infinite;
+}
+/* ふわふわ漂い */
+.particle--float {
+	animation: floatAround ease-in-out infinite;
+}
+/* キラキラ点滅 */
+.particle--twinkle {
+	animation: twinkle ease-in-out infinite, sway ease-in-out infinite;
+}
+
+@keyframes drift {
+	0% { transform: translateY(0) rotate(0deg) scale(1); }
+	50% { transform: translateY(-50vh) rotate(180deg) scale(1.2); }
+	100% { transform: translateY(-110vh) rotate(360deg) scale(0.8); }
+}
+@keyframes sway {
+	0%, 100% { margin-left: 0; }
+	25% { margin-left: 30px; }
+	75% { margin-left: -30px; }
+}
+@keyframes floatAround {
+	0% { transform: translate(0, 0) scale(1); opacity: 0.15; }
+	25% { transform: translate(40px, -30px) scale(1.3); opacity: 0.35; }
+	50% { transform: translate(-20px, -60px) scale(0.9); opacity: 0.2; }
+	75% { transform: translate(30px, -90px) scale(1.15); opacity: 0.3; }
+	100% { transform: translate(0, -120px) scale(1); opacity: 0.15; }
+}
+@keyframes twinkle {
+	0%, 100% { opacity: 0.1; transform: scale(0.6); }
+	50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* ====== Hero ====== */
+.hero {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+	text-align: center;
+	padding: 40px 20px;
+	position: relative;
+}
+
+.hero::after {
+	content: '';
+	position: absolute;
+	bottom: -1px;
+	left: 0;
+	right: 0;
+	height: 80px;
+	background: var(--bg);
+	clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+.hero-logo {
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+	margin-bottom: 24px;
+	animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+	0%, 100% { transform: translateY(0) scale(1); }
+	50% { transform: translateY(-12px) scale(1.02); }
+}
+
+.hero-title {
+	font-family: 'Oooh Baby', cursive;
+	font-size: clamp(48px, 10vw, 80px);
+	color: #fff;
+	text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+	letter-spacing: 2px;
+}
+
+.hero-sub {
+	font-size: clamp(14px, 3vw, 20px);
+	color: rgba(255,255,255,0.9);
+	margin-top: 12px;
+	font-weight: 400;
+}
+
+.hero-tagline {
+	font-size: clamp(12px, 2.5vw, 16px);
+	color: rgba(255,255,255,0.65);
+	margin-top: 32px;
+	letter-spacing: 4px;
+}
+
+.hero-arrow {
+	margin-top: 48px;
+	animation: bounce 2s ease-in-out infinite;
+	text-decoration: none;
+	display: block;
+	width: 40px;
+	height: 40px;
+}
+
+.hero-arrow svg {
+	stroke: rgba(255,255,255,0.5);
+	transition: stroke 0.3s;
+}
+
+.hero-arrow:hover svg {
+	stroke: rgba(255,255,255,0.9);
+}
+
+@keyframes bounce {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(8px); }
+}
+
+/* ====== Section common ====== */
+section { padding: 100px 20px; }
+.container { max-width: 900px; margin: 0 auto; }
+
+.section-label {
+	font-size: 12px;
+	letter-spacing: 4px;
+	text-transform: uppercase;
+	color: var(--purple);
+	font-weight: 700;
+	text-align: center;
+}
+
+.section-title {
+	font-size: clamp(24px, 5vw, 36px);
+	font-weight: 900;
+	text-align: center;
+	margin-top: 8px;
+	margin-bottom: 48px;
+}
+
+/* ====== Overview ====== */
+.overview { background: var(--bg); }
+
+.overview-text {
+	text-align: center;
+	font-size: clamp(15px, 3vw, 18px);
+	color: var(--text-light);
+	max-width: 640px;
+	margin: 0 auto 48px;
+}
+
+.overview-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	gap: 20px;
+}
+
+.overview-card {
+	background: #fff;
+	border-radius: 16px;
+	padding: 32px 24px 28px;
+	text-align: center;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+	transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s;
+	position: relative;
+	overflow: hidden;
+}
+
+.overview-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	border-radius: 16px 16px 0 0;
+}
+
+.overview-card:nth-child(1)::before { background: linear-gradient(90deg, var(--blue), var(--purple)); }
+.overview-card:nth-child(2)::before { background: linear-gradient(90deg, var(--green), var(--blue)); }
+.overview-card:nth-child(3)::before { background: linear-gradient(90deg, var(--pink), var(--purple)); }
+.overview-card:nth-child(4)::before { background: linear-gradient(90deg, var(--orange), var(--yellow)); }
+
+.overview-card:hover {
+	transform: translateY(-6px);
+	box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+}
+
+.overview-card-icon {
+	width: 48px;
+	height: 48px;
+	margin: 0 auto 16px;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.overview-card:nth-child(1) .overview-card-icon { background: linear-gradient(135deg, var(--blue), var(--purple)); }
+.overview-card:nth-child(2) .overview-card-icon { background: linear-gradient(135deg, var(--green), var(--blue)); }
+.overview-card:nth-child(3) .overview-card-icon { background: linear-gradient(135deg, var(--pink), var(--purple)); }
+.overview-card:nth-child(4) .overview-card-icon { background: linear-gradient(135deg, var(--orange), var(--yellow)); }
+
+.overview-card-icon svg {
+	width: 22px;
+	height: 22px;
+	stroke: #fff;
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.overview-card-title {
+	font-size: 15px;
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.overview-card-desc {
+	font-size: 13px;
+	color: var(--text-light);
+	line-height: 1.6;
+}
+
+/* ====== Mascot ====== */
+.mascot {
+	background: linear-gradient(180deg, #fff 0%, #f8f0fa 50%, #f0f5ff 100%);
+	text-align: center;
+	padding: 100px 20px 80px;
+	position: relative;
+	overflow: hidden;
+}
+
+
+.mascot-img-wrap {
+	display: inline-block;
+	position: relative;
+	margin-bottom: 24px;
+}
+
+.mascot-img {
+	width: 200px;
+	height: 200px;
+	object-fit: contain;
+	filter: drop-shadow(0 8px 24px rgba(0,0,0,0.1));
+	transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+	cursor: pointer;
+}
+
+.mascot-img:hover {
+	transform: scale(1.05);
+}
+
+.mascot-img:active {
+	transform: scale(0.95);
+}
+
+/* Dress-up accessories */
+.mascot-accessory {
+	position: absolute;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.4s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+	transform: scale(0.5);
+}
+
+.mascot-accessory.visible {
+	opacity: 1;
+	transform: scale(1);
+}
+
+.mascot-accessory svg {
+	width: 100%;
+	height: 100%;
+}
+
+.mascot-accessory--crown {
+	top: -24px;
+	left: 50%;
+	width: 48px;
+	height: 36px;
+	transform: translateX(-50%) scale(0.5);
+}
+
+.mascot-accessory--crown.visible {
+	transform: translateX(-50%) scale(1);
+}
+
+.mascot-accessory--sparkle-1 {
+	top: 15%;
+	left: -20px;
+	width: 24px;
+	height: 24px;
+}
+
+.mascot-accessory--sparkle-2 {
+	top: 25%;
+	right: -18px;
+	width: 20px;
+	height: 20px;
+}
+
+.mascot-accessory--sparkle-3 {
+	bottom: 25%;
+	left: -25px;
+	width: 18px;
+	height: 18px;
+}
+
+.mascot-accessory--bow {
+	top: -8px;
+	right: 25px;
+	width: 36px;
+	height: 28px;
+}
+
+.mascot-accessory--heart {
+	bottom: 15%;
+	right: -22px;
+	width: 22px;
+	height: 20px;
+}
+
+.mascot-accessory--star {
+	bottom: 35%;
+	right: -28px;
+	width: 20px;
+	height: 20px;
+}
+
+.mascot-name {
+	font-family: 'Oooh Baby', cursive;
+	font-size: clamp(40px, 8vw, 56px);
+	color: var(--purple);
+	margin-bottom: 24px;
+	letter-spacing: 2px;
+}
+
+.mascot-stats {
+	display: inline-flex;
+	gap: 0;
+	background: #fff;
+	border-radius: 40px;
+	box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+	overflow: hidden;
+	margin-bottom: 32px;
+}
+
+.mascot-stat {
+	padding: 12px 24px;
+	font-size: 13px;
+	color: var(--text-light);
+	position: relative;
+}
+
+.mascot-stat:not(:last-child)::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	top: 25%;
+	height: 50%;
+	width: 1px;
+	background: #e0e0e0;
+}
+
+.mascot-stat-label {
+	display: block;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	color: var(--purple);
+	text-transform: uppercase;
+	margin-bottom: 2px;
+}
+
+.mascot-stat-value {
+	font-weight: 700;
+	color: var(--text);
+	font-size: 15px;
+}
+
+.mascot-bubble {
+	max-width: 480px;
+	margin: 0 auto;
+	background: var(--bg);
+	border-radius: 20px;
+	padding: 24px 32px;
+	position: relative;
+	font-size: 15px;
+	color: var(--text-light);
+	line-height: 2;
+}
+
+.mascot-bubble::before {
+	content: '';
+	position: absolute;
+	top: -12px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 0;
+	height: 0;
+	border-left: 14px solid transparent;
+	border-right: 14px solid transparent;
+	border-bottom: 14px solid var(--bg);
+}
+
+.mascot-bubble strong {
+	color: var(--text);
+}
+
+/* ====== Features ====== */
+.features { background: linear-gradient(180deg, var(--bg) 0%, #f0f0fa 100%); }
+
+.feature-block {
+	display: flex;
+	align-items: flex-start;
+	gap: 40px;
+	margin-bottom: 72px;
+}
+
+.feature-block:nth-child(even) { flex-direction: row-reverse; }
+.feature-block:last-child { margin-bottom: 0; }
+
+.feature-visual {
+	flex: 0 0 260px;
+	height: 200px;
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.feature-visual::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	opacity: 0.12;
+	background: repeating-linear-gradient(
+		45deg, transparent, transparent 10px,
+		rgba(255,255,255,0.4) 10px, rgba(255,255,255,0.4) 20px
+	);
+}
+
+.feature-visual svg {
+	width: 56px;
+	height: 56px;
+	stroke: #fff;
+	fill: none;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	position: relative;
+	filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+	animation: icon-wiggle 4s ease-in-out infinite;
+}
+
+@keyframes icon-wiggle {
+	0%, 100% { transform: rotate(0deg) scale(1); }
+	25% { transform: rotate(-3deg) scale(1.04); }
+	75% { transform: rotate(3deg) scale(1.04); }
+}
+
+.fv-annotation { background: linear-gradient(135deg, var(--blue), var(--purple)); }
+.fv-collab { background: linear-gradient(135deg, var(--green), #90caf9); }
+.fv-capture { background: linear-gradient(135deg, var(--orange), var(--yellow)); }
+.fv-ux { background: linear-gradient(135deg, var(--pink), var(--purple)); }
+.fv-data { background: linear-gradient(135deg, #b0bec5, var(--blue)); }
+
+.feature-content { flex: 1; }
+
+.feature-num {
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--purple);
+	letter-spacing: 2px;
+}
+
+.feature-title {
+	font-size: clamp(20px, 4vw, 26px);
+	font-weight: 900;
+	margin: 4px 0 16px;
+}
+
+.feature-list { list-style: none; }
+
+.feature-list li {
+	padding: 8px 0 8px 28px;
+	position: relative;
+	font-size: 14px;
+	color: var(--text-light);
+}
+
+.feature-list li::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 16px;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--blue);
+	transition: transform 0.3s;
+}
+
+.feature-list li:hover::before {
+	transform: scale(1.4);
+}
+
+.feature-list li strong { color: var(--text); }
+
+/* ====== Workflow ====== */
+.workflow { background: #fff; }
+
+.workflow-cols {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 32px;
+}
+
+.workflow-col {
+	background: var(--bg);
+	border-radius: 16px;
+	padding: 32px;
+}
+
+.workflow-col-label {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	padding: 4px 12px;
+	border-radius: 20px;
+	margin-bottom: 16px;
+}
+
+.wl-sender { background: var(--yellow); color: #8a7030; }
+.wl-reviewer { background: var(--green); color: #3a6a35; }
+
+.workflow-col-title {
+	font-size: 18px;
+	font-weight: 700;
+	margin-bottom: 20px;
+}
+
+.workflow-steps {
+	list-style: none;
+	counter-reset: step;
+	position: relative;
+	padding-left: 14px;
+}
+
+.workflow-steps li {
+	counter-increment: step;
+	padding: 8px 0 8px 36px;
+	position: relative;
+	font-size: 14px;
+	color: var(--text-light);
+}
+
+/* vertical line: aligned to center of circle */
+.workflow-steps li::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background: #ddd;
+	transform: translateX(13px);
+}
+
+.workflow-steps li:first-child::after { top: 14px; }
+.workflow-steps li:last-child::after { bottom: calc(100% - 14px); }
+
+/* number circle */
+.workflow-steps li::before {
+	content: counter(step);
+	position: absolute;
+	left: 0;
+	top: 6px;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, var(--blue), var(--purple));
+	color: #fff;
+	font-size: 12px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1;
+	transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s;
+}
+
+.workflow-steps li:hover::before {
+	transform: scale(1.2);
+	box-shadow: 0 4px 12px rgba(168, 192, 232, 0.5);
+}
+
+/* ====== Shortcuts ====== */
+.shortcuts {
+	background: linear-gradient(135deg, #2d2d3d 0%, #3d3d55 100%);
+	color: #fff;
+	position: relative;
+}
+
+.shortcuts .section-label { color: var(--yellow); }
+.shortcuts .section-title { color: #fff; }
+
+.shortcut-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+.shortcut-item {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 16px 20px;
+	background: rgba(255,255,255,0.06);
+	border: 1px solid rgba(255,255,255,0.08);
+	border-radius: 12px;
+	transition: background 0.3s, transform 0.3s;
+}
+
+.shortcut-item:hover {
+	background: rgba(255,255,255,0.12);
+	transform: translateX(4px);
+}
+
+.shortcut-key {
+	flex-shrink: 0;
+	padding: 6px 14px;
+	background: rgba(255,255,255,0.12);
+	border: 1px solid rgba(255,255,255,0.15);
+	border-radius: 8px;
+	font-size: 13px;
+	font-weight: 700;
+	font-family: 'SF Mono', 'Fira Code', monospace;
+	white-space: nowrap;
+	box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+}
+
+.shortcut-desc {
+	font-size: 13px;
+	color: rgba(255,255,255,0.7);
+}
+
+/* ====== Tech ====== */
+.tech {
+	background: #fff;
+	padding-bottom: 100px;
+}
+
+.tech-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 20px;
+}
+
+.tech-item {
+	padding: 28px;
+	border-radius: 16px;
+	position: relative;
+	overflow: hidden;
+	color: #fff;
+	transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s;
+}
+
+.tech-item:hover {
+	transform: translateY(-4px) scale(1.02);
+	box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+.tech-item::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	opacity: 0.08;
+	background: repeating-linear-gradient(
+		-45deg, transparent, transparent 8px,
+		rgba(255,255,255,0.2) 8px, rgba(255,255,255,0.2) 16px
+	);
+}
+
+.tech-item:nth-child(1) { background: linear-gradient(135deg, #7e9fd4, #9b8cc4); }
+.tech-item:nth-child(2) { background: linear-gradient(135deg, #82b87e, #7ea8d4); }
+.tech-item:nth-child(3) { background: linear-gradient(135deg, #c98eb0, #9b8cc4); }
+.tech-item:nth-child(4) { background: linear-gradient(135deg, #d4a87e, #d4c47e); }
+.tech-item:nth-child(5) { background: linear-gradient(135deg, #8eb5c9, #8e9fc9); }
+.tech-item:nth-child(6) { background: linear-gradient(135deg, #9b9b9b, #7ea8d4); }
+
+.tech-item-icon {
+	width: 40px;
+	height: 40px;
+	background: rgba(255,255,255,0.2);
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 16px;
+	position: relative;
+}
+
+.tech-item-icon svg {
+	width: 20px;
+	height: 20px;
+	stroke: #fff;
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.tech-item-title {
+	font-size: 15px;
+	font-weight: 700;
+	margin-bottom: 8px;
+	position: relative;
+}
+
+.tech-item-desc {
+	font-size: 13px;
+	color: rgba(255,255,255,0.8);
+	line-height: 1.6;
+	position: relative;
+}
+
+/* ====== Limitations ====== */
+.limitations {
+	background: linear-gradient(180deg, #fff 0%, #f0f0fa 100%);
+}
+
+.limitations-box {
+	background: rgba(255,255,255,0.7);
+	backdrop-filter: blur(10px);
+	border-radius: 20px;
+	padding: 40px;
+	box-shadow: 0 2px 16px rgba(201, 184, 217, 0.15);
+	border: 1px solid rgba(201, 184, 217, 0.2);
+	max-width: 720px;
+	margin: 0 auto;
+}
+
+.limitations-group {
+	margin-bottom: 24px;
+}
+
+.limitations-group:last-child {
+	margin-bottom: 0;
+}
+
+.limitations-group-title {
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--text);
+	padding-bottom: 8px;
+	margin-bottom: 8px;
+	border-bottom: 1px solid rgba(201, 184, 217, 0.25);
+}
+
+.limitations-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.limitations-list li {
+	font-size: 13px;
+	color: var(--text-light);
+	padding: 5px 0 5px 20px;
+	position: relative;
+	line-height: 1.6;
+}
+
+.limitations-list li::before {
+	content: '—';
+	position: absolute;
+	left: 0;
+	color: var(--purple);
+	opacity: 0.5;
+}
+
+/* ====== Download ====== */
+.download {
+	background: linear-gradient(180deg, #e0e8f0 0%, #e8ddf4 30%, #f0e0f0 70%, #f8f0fa 100%);
+	padding: 80px 20px;
+	text-align: center;
+}
+
+.download-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 20px;
+	flex-wrap: wrap;
+	margin-bottom: 48px;
+}
+
+.download-btn {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 18px 32px;
+	border-radius: 16px;
+	font-size: 15px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	border: none;
+	cursor: pointer;
+}
+
+.download-btn svg {
+	width: 24px;
+	height: 24px;
+	flex-shrink: 0;
+}
+
+.download-btn.github {
+	background: #24292e;
+	color: #fff;
+}
+
+.download-btn.github:hover {
+	background: #1a1e22;
+	transform: translateY(-3px);
+	box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.download-btn.github svg {
+	fill: #fff;
+}
+
+.download-btn.zip {
+	background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+	color: #fff;
+}
+
+.download-btn.zip:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 8px 24px rgba(201, 142, 176, 0.4);
+}
+
+.download-btn.zip svg {
+	stroke: #fff;
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.install-steps {
+	background: rgba(255,255,255,0.7);
+	border-radius: 20px;
+	padding: 32px;
+	max-width: 600px;
+	margin: 0 auto;
+	text-align: left;
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(201, 184, 217, 0.2);
+}
+
+.install-steps-title {
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--text);
+	margin-bottom: 24px;
+	text-align: center;
+}
+
+.install-steps ol {
+	margin: 0;
+	padding: 0;
+	color: var(--text);
+	counter-reset: step-counter;
+	list-style: none;
+}
+
+.install-steps li {
+	position: relative;
+	margin-bottom: 16px;
+	padding-left: 48px;
+	min-height: 32px;
+	display: flex;
+	align-items: center;
+	line-height: 1.6;
+	font-size: 14px;
+	counter-increment: step-counter;
+}
+
+.install-steps li::before {
+	content: counter(step-counter);
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 32px;
+	height: 32px;
+	background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+	color: #fff;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	font-weight: 700;
+	box-shadow: 0 3px 8px rgba(155, 140, 196, 0.3);
+}
+
+.install-steps li:last-child {
+	margin-bottom: 0;
+}
+
+.install-steps code {
+	background: rgba(155, 140, 196, 0.15);
+	padding: 2px 6px;
+	border-radius: 6px;
+	font-family: 'SF Mono', 'Fira Code', monospace;
+	font-size: 13px;
+	color: var(--purple);
+	letter-spacing: 0.3px;
+	margin: 0 2px;
+}
+
+/* ====== Feedback ====== */
+.feedback {
+	background: linear-gradient(180deg, #f8f0fa 0%, #f0f5ff 40%, var(--bg) 100%);
+	padding: 100px 20px 140px;
+	text-align: center;
+}
+
+.feedback-reactions {
+	display: flex;
+	justify-content: center;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin-bottom: 48px;
+}
+
+.reaction-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 20px 24px;
+	background: #fff;
+	border: 2px solid transparent;
+	border-radius: 20px;
+	cursor: pointer;
+	transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	box-shadow: 0 4px 16px rgba(201, 184, 217, 0.2);
+	width: 120px;
+}
+
+.reaction-btn:hover {
+	transform: translateY(-4px) scale(1.05);
+	box-shadow: 0 8px 24px rgba(201, 184, 217, 0.3);
+	border-color: var(--pink);
+}
+
+.reaction-btn:active {
+	transform: scale(0.95);
+}
+
+.reaction-btn.voted {
+	background: linear-gradient(135deg, #fff5f8 0%, #f5f0ff 100%);
+	border-color: var(--purple);
+}
+
+.reaction-icon {
+	width: 36px;
+	height: 36px;
+}
+
+.reaction-icon svg {
+	width: 100%;
+	height: 100%;
+}
+
+.reaction-label {
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--text);
+}
+
+.reaction-count {
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--purple);
+	min-width: 24px;
+}
+
+/* Comment Form */
+.feedback-form {
+	max-width: 500px;
+	margin: 0 auto 48px;
+}
+
+.feedback-input-wrap {
+	display: flex;
+	gap: 12px;
+	background: #fff;
+	padding: 8px;
+	border-radius: 16px;
+	box-shadow: 0 4px 16px rgba(201, 184, 217, 0.2);
+}
+
+.feedback-input {
+	flex: 1;
+	border: none;
+	padding: 12px 16px;
+	font-size: 14px;
+	font-family: inherit;
+	border-radius: 12px;
+	background: transparent;
+	outline: none;
+}
+
+.feedback-input::placeholder {
+	color: var(--text-light);
+}
+
+.feedback-submit {
+	padding: 12px 24px;
+	background: linear-gradient(135deg, var(--pink), var(--purple));
+	color: #fff;
+	border: none;
+	border-radius: 12px;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	font-family: inherit;
+}
+
+.feedback-submit:hover {
+	transform: scale(1.05);
+	box-shadow: 0 4px 16px rgba(240, 196, 212, 0.5);
+}
+
+.feedback-submit:active {
+	transform: scale(0.95);
+}
+
+
+@media (max-width: 700px) {
+	.faq { padding: 64px 16px; }
+	.faq-question { padding: 16px; font-size: 14px; }
+	.faq-question::before { width: 24px; height: 24px; font-size: 12px; }
+	.faq-answer-inner { padding: 0 16px 16px 52px; font-size: 13px; }
+	.download { padding: 64px 16px; }
+	.download-buttons { gap: 12px; }
+	.download-btn { padding: 14px 20px; font-size: 14px; width: 100%; justify-content: center; }
+	.star-hint { margin-top: -20px; margin-bottom: 32px; }
+	.install-steps { padding: 24px 20px; }
+	.install-steps-title { font-size: 15px; }
+	.install-steps li { font-size: 13px; }
+	.feedback { padding: 64px 16px 100px; }
+	.feedback-reactions { gap: 10px; }
+	.reaction-btn { padding: 14px 16px; width: 100px; border-radius: 16px; }
+	.reaction-icon { width: 28px; height: 28px; }
+	.reaction-label { font-size: 10px; }
+	.reaction-count { font-size: 14px; }
+	.feedback-input-wrap { flex-direction: column; }
+	.feedback-submit { width: 100%; }
+}
+
+/* ====== Footer ====== */
+.footer {
+	text-align: center;
+	padding: 64px 20px;
+	background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+	color: rgba(255,255,255,0.8);
+	font-size: 13px;
+	position: relative;
+	margin-top: auto;
+}
+
+.footer::before {
+	content: '';
+	position: absolute;
+	top: -59px;
+	left: 0;
+	right: 0;
+	height: 60px;
+	background: var(--bg);
+	clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+.footer-logo {
+	width: 56px;
+	height: 56px;
+	border-radius: 14px;
+	margin-bottom: 12px;
+	animation: float 3s ease-in-out infinite;
+	box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.footer-title {
+	font-family: 'Oooh Baby', cursive;
+	font-size: 32px;
+	color: #fff;
+	margin-bottom: 4px;
+}
+
+.footer-logo-link {
+	display: inline-block;
+	transition: transform 0.3s;
+}
+
+.footer-logo-link:hover {
+	transform: scale(1.1);
+}
+
+/* ====== Dot Nav ====== */
+.dot-nav {
+	position: fixed;
+	right: 20px;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 100;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	align-items: center;
+}
+
+.dot-nav a {
+	display: block;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: var(--purple);
+	opacity: 0.3;
+	transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+	position: relative;
+	text-decoration: none;
+}
+
+.dot-nav a:hover {
+	opacity: 0.6;
+	transform: scale(1.3);
+}
+
+/* active: heart shape */
+.dot-nav a.active {
+	opacity: 1;
+	width: 14px;
+	height: 14px;
+	border-radius: 0;
+	background: var(--pink);
+	transform: rotate(-45deg) scale(1);
+	animation: dot-pulse 1.5s ease-in-out infinite;
+}
+
+.dot-nav a.active::before,
+.dot-nav a.active::after {
+	content: '';
+	position: absolute;
+	width: 14px;
+	height: 14px;
+	background: var(--pink);
+	border-radius: 50%;
+}
+
+.dot-nav a.active::before {
+	top: -7px;
+	left: 0;
+}
+
+.dot-nav a.active::after {
+	top: 0;
+	left: 7px;
+}
+
+@keyframes dot-pulse {
+	0%, 100% { transform: rotate(-45deg) scale(1); }
+	50% { transform: rotate(-45deg) scale(1.15); }
+}
+
+/* tooltip */
+.dot-nav a span {
+	position: absolute;
+	right: 24px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: var(--text);
+	color: #fff;
+	font-size: 11px;
+	padding: 4px 10px;
+	border-radius: 6px;
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.3s, right 0.3s;
+}
+
+.dot-nav a:hover span {
+	opacity: 1;
+	right: 28px;
+}
+
+/* ====== Language Toggle ====== */
+.lang-toggle {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	z-index: 101;
+	display: flex;
+	background: rgba(255,255,255,0.95);
+	backdrop-filter: blur(10px);
+	border-radius: 24px;
+	padding: 5px;
+	box-shadow: 0 4px 20px rgba(201, 184, 217, 0.3);
+	font-size: 11px;
+	font-weight: 700;
+	border: 2px solid rgba(201, 184, 217, 0.3);
+}
+
+.lang-toggle button {
+	border: none;
+	background: transparent;
+	padding: 8px 16px;
+	border-radius: 18px;
+	cursor: pointer;
+	color: var(--text-light);
+	transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	font-family: inherit;
+	font-weight: 700;
+	position: relative;
+}
+
+.lang-toggle button.active {
+	background: linear-gradient(135deg, var(--pink), var(--purple));
+	color: #fff;
+	transform: scale(1.05);
+	box-shadow: 0 2px 8px rgba(240, 196, 212, 0.5);
+}
+
+.lang-toggle button:hover:not(.active) {
+	color: var(--purple);
+	transform: scale(1.05);
+}
+
+.lang-toggle button:active {
+	transform: scale(0.95);
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 700px) {
+	.lang-toggle {
+		top: 12px;
+		right: 12px;
+		padding: 4px;
+	}
+	.lang-toggle button {
+		padding: 6px 12px;
+		font-size: 10px;
+	}
+	.dot-nav { right: 10px; gap: 10px; }
+	.dot-nav a { width: 8px; height: 8px; }
+	.dot-nav a.active { width: 10px; height: 10px; }
+	.dot-nav a.active::before,
+	.dot-nav a.active::after { width: 10px; height: 10px; }
+	.dot-nav a.active::before { top: -5px; }
+	.dot-nav a.active::after { left: 5px; }
+	.dot-nav a span { display: none; }
+	.feature-block,
+	.feature-block:nth-child(even) { flex-direction: column; }
+	.feature-visual {
+		flex: none;
+		width: 100%;
+		height: 140px;
+	}
+	.workflow-cols { grid-template-columns: 1fr; }
+	.mascot-img { width: 150px; height: 150px; }
+	.mascot-stats { flex-wrap: wrap; border-radius: 16px; justify-content: center; }
+	.mascot-stat { padding: 10px 18px; }
+	.mascot-bubble { padding: 20px 24px; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ====== Language Toggle ====== -->
+<div class="lang-toggle" id="langToggle">
+	<button class="active" data-lang="ja">JP</button>
+	<button data-lang="en">EN</button>
+</div>
+
+<!-- ====== Dot Nav ====== -->
+<nav class="dot-nav" id="dotNav">
+	<a href="#overview" data-section="overview"><span>Overview</span></a>
+	<a href="#mascot" data-section="mascot"><span>cocome</span></a>
+	<a href="#features" data-section="features"><span>Features</span></a>
+	<a href="#workflow" data-section="workflow"><span>Workflow</span></a>
+	<a href="#shortcuts" data-section="shortcuts"><span>Shortcuts</span></a>
+	<a href="#tech" data-section="tech"><span>Tech</span></a>
+	<a href="#limitations" data-section="limitations"><span>Limitations</span></a>
+	<a href="#download" data-section="download"><span>Download</span></a>
+	<a href="#feedback" data-section="feedback"><span>Feedback</span></a>
+</nav>
+
+<!-- ====== Hero ====== -->
+<section class="hero">
+	<div class="particles" id="particles"></div>
+	<img src="../assets/icons/icon_128px.png" alt="CoMemo" class="hero-logo">
+	<h1 class="hero-title">CoMemo</h1>
+	<p class="hero-sub i18n" data-en="Chrome extension for adding memos to web pages and sharing with your team">Webページにメモを貼って、チームで共有できるChrome拡張機能</p>
+	<p class="hero-tagline">DESIGN REVIEW MADE SIMPLE</p>
+	<a href="#overview" class="hero-arrow">
+		<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<polyline points="6 9 12 15 18 9"></polyline>
+		</svg>
+	</a>
+</section>
+
+<!-- ====== Overview ====== -->
+<section class="overview" id="overview">
+	<div class="container">
+		<p class="section-label reveal">Overview</p>
+		<h2 class="section-title reveal i18n" data-en="What CoMemo Can Do">CoMemoでできること</h2>
+		<p class="overview-text reveal i18n" data-en="Place sticky memos and shapes on pages, share with your team via a single URL.<br>Complete design reviews and feedback exchanges directly in your browser.">
+			ページ上に付箋メモや図形を配置し、URLひとつでチームに共有。<br>
+			デザインレビューやフィードバックのやり取りをブラウザ上で完結できます。
+		</p>
+		<div class="overview-cards">
+			<div class="overview-card reveal">
+				<div class="overview-card-icon">
+					<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+				</div>
+				<div class="overview-card-title i18n" data-en="Annotate">書き込む</div>
+				<div class="overview-card-desc i18n" data-en="Add annotations to pages<br>with sticky memos and shapes">付箋メモと図形で<br>ページにアノテーション</div>
+			</div>
+			<div class="overview-card reveal reveal-delay-1">
+				<div class="overview-card-icon">
+					<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+				</div>
+				<div class="overview-card-title i18n" data-en="Share">共有する</div>
+				<div class="overview-card-desc i18n" data-en="Just send a URL to reproduce<br>all memos and shapes">URLを送るだけで<br>メモ・図形がそのまま再現</div>
+			</div>
+			<div class="overview-card reveal reveal-delay-2">
+				<div class="overview-card-icon">
+					<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+				</div>
+				<div class="overview-card-title i18n" data-en="Communicate">やり取りする</div>
+				<div class="overview-card-desc i18n" data-en="Exchange review feedback<br>via comments in memos">メモ内のコメントで<br>レビューのやり取りが可能</div>
+			</div>
+			<div class="overview-card reveal reveal-delay-3">
+				<div class="overview-card-icon">
+					<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+				</div>
+				<div class="overview-card-title i18n" data-en="Capture">記録する</div>
+				<div class="overview-card-desc i18n" data-en="Save screenshots of<br>viewport or full page">表示範囲・ページ全体の<br>スクリーンショットを保存</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ====== Mascot ====== -->
+<section class="mascot" id="mascot">
+	<div class="particles" id="mascot-particles"></div>
+	<div class="container">
+		<div class="mascot-img-wrap reveal" id="cocome-wrap">
+			<img src="../assets/icons/cocome_300px.png" alt="cocome" class="mascot-img" id="cocome-img">
+			<!-- Crown -->
+			<span class="mascot-accessory mascot-accessory--crown">
+				<svg viewBox="0 0 48 36" fill="none"><path d="M4 28L8 12L16 20L24 6L32 20L40 12L44 28H4Z" fill="#f5d76e" stroke="#d4a84b" stroke-width="2"/><circle cx="8" cy="10" r="3" fill="#f5d76e" stroke="#d4a84b"/><circle cx="24" cy="4" r="3" fill="#f5d76e" stroke="#d4a84b"/><circle cx="40" cy="10" r="3" fill="#f5d76e" stroke="#d4a84b"/></svg>
+			</span>
+			<!-- Bow -->
+			<span class="mascot-accessory mascot-accessory--bow">
+				<svg viewBox="0 0 36 28" fill="none"><ellipse cx="10" cy="14" rx="9" ry="7" fill="#f0c4d4" stroke="#d4a0b4" stroke-width="1.5"/><ellipse cx="26" cy="14" rx="9" ry="7" fill="#f0c4d4" stroke="#d4a0b4" stroke-width="1.5"/><circle cx="18" cy="14" r="4" fill="#e8a8c0" stroke="#d4a0b4" stroke-width="1.5"/></svg>
+			</span>
+			<!-- Sparkles -->
+			<span class="mascot-accessory mascot-accessory--sparkle-1">
+				<svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14 10L22 12L14 14L12 22L10 14L2 12L10 10L12 2Z" fill="#c9b8d9" stroke="#a090b0" stroke-width="1"/></svg>
+			</span>
+			<span class="mascot-accessory mascot-accessory--sparkle-2">
+				<svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14 10L22 12L14 14L12 22L10 14L2 12L10 10L12 2Z" fill="#a8c0e8" stroke="#8099c0" stroke-width="1"/></svg>
+			</span>
+			<span class="mascot-accessory mascot-accessory--sparkle-3">
+				<svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14 10L22 12L14 14L12 22L10 14L2 12L10 10L12 2Z" fill="#f5e6a3" stroke="#d0c080" stroke-width="1"/></svg>
+			</span>
+			<!-- Heart -->
+			<span class="mascot-accessory mascot-accessory--heart">
+				<svg viewBox="0 0 24 22" fill="none"><path d="M12 21C12 21 2 13 2 7C2 3.5 5 1 8 1C10 1 11.5 2 12 3.5C12.5 2 14 1 16 1C19 1 22 3.5 22 7C22 13 12 21 12 21Z" fill="#f0c4d4" stroke="#d4a0b4" stroke-width="1.5"/></svg>
+			</span>
+			<!-- Star -->
+			<span class="mascot-accessory mascot-accessory--star">
+				<svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2Z" fill="#f5e6a3" stroke="#d0c080" stroke-width="1.5"/></svg>
+			</span>
+		</div>
+		<h2 class="mascot-name reveal">cocome</h2>
+		<div class="mascot-stats reveal">
+			<div class="mascot-stat">
+				<span class="mascot-stat-label">Height</span>
+				<span class="mascot-stat-value">2cm</span>
+			</div>
+			<div class="mascot-stat">
+				<span class="mascot-stat-label">Weight</span>
+				<span class="mascot-stat-value">0.1g</span>
+			</div>
+			<div class="mascot-stat">
+				<span class="mascot-stat-label">Role</span>
+				<span class="mascot-stat-value">Navigator</span>
+			</div>
+		</div>
+		<div class="mascot-bubble reveal i18n" data-en="I'm cocome, <strong>CoMemo</strong>'s navigator.<br>A tiny tiny presence, quietly watching over everyone's memos.<br>When you minimize a memo, I'll peek out.<br>I'm always by your side during reviews.">
+			<strong>CoMemo</strong>のナビゲーター、cocomeです。<br>
+			みんなのメモをそっと見守る、ちいさなちいさな存在。<br>
+			メモを最小化すると、ひょっこり顔を出します。<br>
+			いつもあなたのレビューのそばにいるよ。
+		</div>
+	</div>
+</section>
+
+<!-- ====== Features ====== -->
+<section class="features" id="features">
+	<div class="container">
+		<p class="section-label reveal">Features</p>
+		<h2 class="section-title reveal i18n" data-en="Feature Details">機能詳細</h2>
+
+		<div class="feature-block reveal">
+			<div class="feature-visual fv-annotation">
+				<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+			</div>
+			<div class="feature-content">
+				<p class="feature-num">FEATURE 01</p>
+				<h3 class="feature-title i18n" data-en="Annotation">アノテーション</h3>
+				<ul class="feature-list">
+					<li class="i18n" data-en="<strong>Sticky Memos</strong> — Place draggable sticky notes on pages"><strong>付箋メモ</strong> &#8212; ページ上にドラッグ可能な付箋を配置</li>
+					<li class="i18n" data-en="<strong>Shape Marking</strong> — Draw arrows, rectangles, and circles with SVG"><strong>図形マーキング</strong> &#8212; 矢印・四角・丸をSVGで描画</li>
+					<li class="i18n" data-en="<strong>Shape Controls</strong> — Drag to move, handles to resize"><strong>図形操作</strong> &#8212; ドラッグ移動、ハンドルでリサイズ</li>
+					<li class="i18n" data-en="<strong>Right-click Add</strong> — Place memos precisely at cursor position"><strong>右クリック追加</strong> &#8212; カーソル位置にピンポイントでメモ配置</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="feature-block reveal">
+			<div class="feature-visual fv-collab">
+				<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+			</div>
+			<div class="feature-content">
+				<p class="feature-num">FEATURE 02</p>
+				<h3 class="feature-title i18n" data-en="Collaboration">コラボレーション</h3>
+				<ul class="feature-list">
+					<li class="i18n" data-en="<strong>URL Sharing</strong> — Generate and copy share URL with one click"><strong>URL共有</strong> &#8212; ワンクリックで共有URLを生成・コピー</li>
+					<li class="i18n" data-en="<strong>Comments</strong> — Collapsible threads for each memo"><strong>コメント</strong> &#8212; メモ毎に折りたたみ式スレッドでやり取り</li>
+					<li class="i18n" data-en="<strong>Data Sync</strong> — Cloud storage and real-time sharing via Supabase"><strong>データ同期</strong> &#8212; Supabaseでクラウド保存・リアルタイム共有</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="feature-block reveal">
+			<div class="feature-visual fv-capture">
+				<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+			</div>
+			<div class="feature-content">
+				<p class="feature-num">FEATURE 03</p>
+				<h3 class="feature-title i18n" data-en="Screenshot">スクリーンショット</h3>
+				<ul class="feature-list">
+					<li class="i18n" data-en="<strong>Viewport SS</strong> — Instantly save visible area as PNG"><strong>表示範囲SS</strong> &#8212; 見えている領域をPNGで即保存</li>
+					<li class="i18n" data-en="<strong>Full Page SS</strong> — Scroll-stitch entire page and save"><strong>全体SS</strong> &#8212; ページ全体をスクロール合成して保存</li>
+					<li class="i18n" data-en="<strong>Retina Support</strong> — Crisp capture on high-resolution displays"><strong>Retina対応</strong> &#8212; 高解像度ディスプレイでも鮮明にキャプチャ</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="feature-block reveal">
+			<div class="feature-visual fv-ux">
+				<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+			</div>
+			<div class="feature-content">
+				<p class="feature-num">FEATURE 04</p>
+				<h3 class="feature-title i18n" data-en="UX & Controls">操作・UX</h3>
+				<ul class="feature-list">
+					<li class="i18n" data-en="<strong>Floating Panel</strong> — Draggable, minimizable control panel"><strong>フローティングパネル</strong> &#8212; ドラッグ移動・最小化できる操作パネル</li>
+					<li class="i18n" data-en="<strong>Memo Mascot</strong> — Minimized memos become character icons"><strong>メモのキャラ化</strong> &#8212; 最小化するとキャラクターアイコンに変化</li>
+					<li class="i18n" data-en="<strong>Undo</strong> — Ctrl+Z to restore deleted memos and shapes"><strong>元に戻す</strong> &#8212; Ctrl+Z でメモ・図形の削除を取り消し</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="feature-block reveal">
+			<div class="feature-visual fv-data">
+				<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+			</div>
+			<div class="feature-content">
+				<p class="feature-num">FEATURE 05</p>
+				<h3 class="feature-title i18n" data-en="Data Persistence">データ永続化</h3>
+				<ul class="feature-list">
+					<li class="i18n" data-en="<strong>Local Storage</strong> — Works offline with chrome.storage"><strong>ローカル保存</strong> &#8212; chrome.storageでオフラインでも動作</li>
+					<li class="i18n" data-en="<strong>Cloud Storage</strong> — Shared data managed in DB via Supabase"><strong>クラウド保存</strong> &#8212; Supabase連携で共有データをDB管理</li>
+					<li class="i18n" data-en="<strong>Fallback</strong> — Auto-switch to local on cloud failure"><strong>フォールバック</strong> &#8212; クラウド障害時はローカルに自動切替</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ====== Workflow ====== -->
+<section class="workflow" id="workflow">
+	<div class="container">
+		<p class="section-label reveal">Workflow</p>
+		<h2 class="section-title reveal i18n" data-en="Workflow">作業フロー</h2>
+		<div class="workflow-cols">
+			<div class="workflow-col reveal">
+				<span class="workflow-col-label wl-sender">SENDER</span>
+				<h3 class="workflow-col-title i18n" data-en="Requester">依頼者</h3>
+				<ol class="workflow-steps">
+					<li class="i18n" data-en="Open page and click extension icon">ページを開いて拡張アイコンをクリック</li>
+					<li class="i18n" data-en="Add memo and write feedback">メモを追加してフィードバックを記入</li>
+					<li class="i18n" data-en="Mark up issues with arrows and rectangles">矢印・四角で問題箇所をマークアップ</li>
+					<li class="i18n" data-en="Generate URL with 'Copy Share URL'">「共有URLをコピー」でURLを生成</li>
+					<li class="i18n" data-en="Share URL via Slack or email">SlackやメールでURLを共有</li>
+				</ol>
+			</div>
+			<div class="workflow-col reveal reveal-delay-1">
+				<span class="workflow-col-label wl-reviewer">REVIEWER</span>
+				<h3 class="workflow-col-title i18n" data-en="Reviewer">レビュアー</h3>
+				<ol class="workflow-steps">
+					<li class="i18n" data-en="Open the shared URL">共有URLを開く</li>
+					<li class="i18n" data-en="Memos and shapes auto-restore">メモ・図形が自動で復元される</li>
+					<li class="i18n" data-en="Reply in the comment section">コメント欄で回答を入力</li>
+					<li class="i18n" data-en="Add more memos/shapes if needed">必要なら追加メモ・図形を配置</li>
+					<li class="i18n" data-en="Capture screenshot to record status">スクリーンショットで現状を記録</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ====== Shortcuts ====== -->
+<section class="shortcuts" id="shortcuts">
+	<div class="container">
+		<p class="section-label reveal">Shortcuts</p>
+		<h2 class="section-title reveal i18n" data-en="Keyboard Shortcuts">キーボードショートカット</h2>
+		<div class="shortcut-grid">
+			<div class="shortcut-item reveal"><span class="shortcut-key">Ctrl + Z</span><span class="shortcut-desc i18n" data-en="Undo deleted memos/shapes">メモ・図形の削除を元に戻す</span></div>
+			<div class="shortcut-item reveal reveal-delay-1"><span class="shortcut-key">Delete</span><span class="shortcut-desc i18n" data-en="Delete selected shape">選択中の図形を削除</span></div>
+			<div class="shortcut-item reveal reveal-delay-1"><span class="shortcut-key">Backspace</span><span class="shortcut-desc i18n" data-en="Delete selected shape">選択中の図形を削除</span></div>
+			<div class="shortcut-item reveal reveal-delay-2"><span class="shortcut-key">ESC</span><span class="shortcut-desc i18n" data-en="Cancel shape drawing mode">図形描画モードをキャンセル</span></div>
+			<div class="shortcut-item reveal reveal-delay-2"><span class="shortcut-key">Enter</span><span class="shortcut-desc i18n" data-en="Send comment">コメントを送信</span></div>
+			<div class="shortcut-item reveal reveal-delay-3"><span class="shortcut-key">Right Click</span><span class="shortcut-desc i18n" data-en="Add memo at cursor position">カーソル位置にメモを追加</span></div>
+		</div>
+	</div>
+</section>
+
+<!-- ====== Tech ====== -->
+<section class="tech" id="tech">
+	<div class="container">
+		<p class="section-label reveal">Tech Stack</p>
+		<h2 class="section-title reveal i18n" data-en="Tech Highlights">技術ポイント</h2>
+		<div class="tech-grid">
+			<div class="tech-item reveal">
+				<div class="tech-item-icon">
+					<svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+				</div>
+				<div class="tech-item-title">Manifest V3</div>
+				<div class="tech-item-desc i18n" data-en="Latest Chrome extension spec. Service Worker + Content Script architecture">最新のChrome拡張仕様に準拠。Service Worker + Content Script構成</div>
+			</div>
+			<div class="tech-item reveal reveal-delay-1">
+				<div class="tech-item-icon">
+					<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+				</div>
+				<div class="tech-item-title i18n" data-en="Dual Storage">2層ストレージ</div>
+				<div class="tech-item-desc i18n" data-en="chrome.storage + Supabase dual save. Offline capable">chrome.storage + Supabaseのデュアル保存。オフライン対応</div>
+			</div>
+			<div class="tech-item reveal reveal-delay-2">
+				<div class="tech-item-icon">
+					<svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+				</div>
+				<div class="tech-item-title i18n" data-en="SVG Shape Drawing">SVG図形描画</div>
+				<div class="tech-item-desc i18n" data-en="Transparent hit area (24px) makes thin lines easy to click">透明ヒットエリア(24px幅)で細い線もクリックしやすい設計</div>
+			</div>
+			<div class="tech-item reveal">
+				<div class="tech-item-icon">
+					<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+				</div>
+				<div class="tech-item-title i18n" data-en="Full Page SS Algorithm">全体SSアルゴリズム</div>
+				<div class="tech-item-desc i18n" data-en="Scroll-capture-stitch by viewport units on Canvas">ビューポート単位でスクロール・キャプチャ・Canvas合成</div>
+			</div>
+			<div class="tech-item reveal reveal-delay-1">
+				<div class="tech-item-icon">
+					<svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+				</div>
+				<div class="tech-item-title i18n" data-en="Responsive">レスポンシブ対応</div>
+				<div class="tech-item-desc i18n" data-en="Optimized for 480px and below. Touch/mouse events supported">480px以下で最適化。全操作にtouch/mouseイベント両対応</div>
+			</div>
+			<div class="tech-item reveal reveal-delay-2">
+				<div class="tech-item-icon">
+					<svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+				</div>
+				<div class="tech-item-title i18n" data-en="Zero Dependencies">ゼロ依存</div>
+				<div class="tech-item-desc i18n" data-en="No frameworks. Just Vanilla JS + Supabase SDK">フレームワーク不使用。Vanilla JS + Supabase SDKのみ</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ====== Limitations ====== -->
+<section class="limitations" id="limitations">
+	<div class="container">
+		<p class="section-label reveal">Limitations</p>
+		<h2 class="section-title reveal i18n" data-en="A Few Things to Keep in Mind"> CoMemoでできないこと</h2>
+
+		<div class="limitations-box reveal">
+			<div class="limitations-group">
+				<p class="limitations-group-title i18n" data-en="Pages that need login">ログインが必要なページ</p>
+				<ul class="limitations-list">
+					<li class="i18n" data-en="Memos, shapes, screenshots, and local save work normally on login-required pages">メモ・図形・スクリーンショット・ローカル保存はログインが必要なページでも通常通り使えます</li>
+					<li class="i18n" data-en="Shared URLs need the recipient to also be logged in">共有URLを使う場合、開く相手も同じページにログインできる必要があります</li>
+					<li class="i18n" data-en="Password-protected or IP-restricted pages may not load for others">パスワード保護やアクセス制限のあるページは、共有相手側で表示できないことがあります</li>
+				</ul>
+			</div>
+			<div class="limitations-group">
+				<p class="limitations-group-title i18n" data-en="Pages where extensions can't run">拡張機能が動かないページ</p>
+				<ul class="limitations-list">
+					<li class="i18n" data-en="Chrome internal pages like chrome://settings or the Web Store">Chromeの設定ページ（chrome://〜）やウェブストア</li>
+					<li class="i18n" data-en="Content inside embedded frames from other sites (YouTube, Google Maps, etc.)">他サイトの埋め込みコンテンツ内（YouTube、Googleマップなど）</li>
+				</ul>
+			</div>
+			<div class="limitations-group">
+				<p class="limitations-group-title i18n" data-en="Full page screenshot">ページ全体のスクリーンショット</p>
+				<ul class="limitations-list">
+					<li class="i18n" data-en="Extremely long or infinite-scroll pages may not capture fully">とても長いページや無限スクロールのページは、すべて撮りきれないことがあります</li>
+					<li class="i18n" data-en="Images that load on scroll may appear blank if not yet visible">スクロールで読み込まれる画像は、表示前だと空白になる場合があります</li>
+				</ul>
+			</div>
+			<div class="limitations-group">
+				<p class="limitations-group-title i18n" data-en="Supported environment">対応環境</p>
+				<ul class="limitations-list">
+					<li class="i18n" data-en="Desktop Chrome only — not available on mobile or other browsers">デスクトップ版のGoogle Chrome専用です</li>
+					<li class="i18n" data-en="Firefox, Safari, Edge, and mobile browsers are not supported">Firefox・Safari・Edge やスマートフォンのブラウザには対応していません</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ====== Download ====== -->
+<section class="download" id="download">
+	<div class="container">
+		<p class="section-label reveal">Download</p>
+		<h2 class="section-title reveal i18n" data-en="Get CoMemo">ダウンロード</h2>
+
+		<div class="download-buttons reveal">
+			<a href="https://github.com/nonsenseblue/Comemo" target="_blank" rel="noopener" class="download-btn github">
+				<svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+				<span>GitHub</span>
+			</a>
+			<a href="#" id="downloadZip" class="download-btn zip">
+				<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+				<span class="i18n" data-en="Download ZIP">ZIPダウンロード</span>
+			</a>
+		</div>
+
+		<div class="install-steps reveal">
+			<p class="install-steps-title i18n" data-en="Chrome Extension Installation">Chrome拡張機能のインストール手順</p>
+			<ol>
+				<li class="i18n" data-en="Unzip the downloaded file">ダウンロードしたZIPファイルを解凍する</li>
+				<li class="i18n" data-en="Open Chrome and go to <code>chrome://extensions</code>">Chromeを開き、<code>chrome://extensions</code> にアクセス</li>
+				<li class="i18n" data-en="Enable &quot;Developer mode&quot; (top right toggle)">右上の「デベロッパーモード」をONにする</li>
+				<li class="i18n" data-en="Click &quot;Load unpacked&quot;">「パッケージ化されていない拡張機能を読み込む」をクリック</li>
+				<li class="i18n" data-en="Select the unzipped <code>CoMemo</code> folder (contains manifest.json)">解凍した <code>CoMemo</code> フォルダを選択（manifest.jsonがある場所）</li>
+			</ol>
+		</div>
+	</div>
+</section>
+
+<!-- ====== Feedback ====== -->
+<section class="feedback" id="feedback">
+	<div class="container">
+		<p class="section-label reveal">Feedback</p>
+		<h2 class="section-title reveal i18n" data-en="Your Impressions">ご感想をお聞かせください</h2>
+
+		<div class="feedback-reactions reveal">
+			<button class="reaction-btn" data-reaction="cute" onclick="handleReaction(this, 'cute')">
+				<span class="reaction-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 3 14 3 8.5C3 5.5 5.5 3 8.5 3C10.5 3 12 4.5 12 4.5C12 4.5 13.5 3 15.5 3C18.5 3 21 5.5 21 8.5C21 14 12 21 12 21Z" fill="#f0c4d4" stroke="#d4a0b4" stroke-width="1.5"/></svg></span>
+				<span class="reaction-label i18n" data-en="Cute">かわいい</span>
+				<span class="reaction-count" id="count-cute">0</span>
+			</button>
+			<button class="reaction-btn" data-reaction="useful" onclick="handleReaction(this, 'useful')">
+				<span class="reaction-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16L5.5 21L8 13.5L2 9H9.5L12 2Z" fill="#f5e6a3" stroke="#d0c080" stroke-width="1.5"/></svg></span>
+				<span class="reaction-label i18n" data-en="Useful">便利そう</span>
+				<span class="reaction-count" id="count-useful">0</span>
+			</button>
+			<button class="reaction-btn" data-reaction="want" onclick="handleReaction(this, 'want')">
+				<span class="reaction-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#a8c0e8" stroke="#8099c0" stroke-width="1.5"/><path d="M8 14C9 16 11 17 12 17C13 17 15 16 16 14" stroke="#8099c0" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="10" r="1" fill="#8099c0"/><circle cx="15" cy="10" r="1" fill="#8099c0"/></svg></span>
+				<span class="reaction-label i18n" data-en="Want to try">使いたい</span>
+				<span class="reaction-count" id="count-want">0</span>
+			</button>
+		</div>
+
+		<div class="feedback-form reveal">
+			<div class="feedback-input-wrap">
+				<input type="text" class="feedback-input" id="feedbackInput" placeholder="ひとことコメントを残す..." maxlength="100">
+				<button class="feedback-submit" id="feedbackSubmit" type="button">
+					<span class="i18n" data-en="Send">送信</span>
+				</button>
+			</div>
+		</div>
+
+	</div>
+</section>
+
+<!-- ====== Footer ====== -->
+<footer class="footer">
+	<a href="cocome.html" class="footer-logo-link"><img src="../assets/icons/icon_64px.png" alt="CoMemo" class="footer-logo"></a>
+	<p class="footer-title">CoMemo</p>
+	<p class="i18n" data-en="Web Memo Share — Chrome Extension">Web Memo Share &mdash; Chrome Extension</p>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+	entries.forEach(entry => {
+		if (entry.isIntersecting) {
+			entry.target.classList.add('visible');
+		}
+	});
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Dot nav active tracking
+(function dotNav() {
+	const nav = document.getElementById('dotNav');
+	const dots = nav.querySelectorAll('a');
+	const sections = Array.from(dots).map(d => document.getElementById(d.dataset.section));
+
+	const navObserver = new IntersectionObserver((entries) => {
+		entries.forEach(entry => {
+			if (entry.isIntersecting) {
+				dots.forEach(d => d.classList.remove('active'));
+				const dot = nav.querySelector('[data-section="' + entry.target.id + '"]');
+				if (dot) dot.classList.add('active');
+			}
+		});
+	}, { threshold: 0.3, rootMargin: '-10% 0px -50% 0px' });
+
+	sections.forEach(s => { if (s) navObserver.observe(s); });
+
+	// hide in hero
+	const heroObserver = new IntersectionObserver(([e]) => {
+		nav.style.opacity = e.isIntersecting ? '0' : '1';
+		nav.style.pointerEvents = e.isIntersecting ? 'none' : 'auto';
+	}, { threshold: 0.5 });
+	heroObserver.observe(document.querySelector('.hero'));
+	nav.style.transition = 'opacity 0.4s';
+})();
+
+// Particles generator
+function createParticles(containerId, count, colorPalette) {
+	const container = document.getElementById(containerId);
+	if (!container) return;
+	const types = ['drift', 'drift', 'float', 'twinkle'];
+	const shapes = ['circle', 'circle', 'circle', 'square', 'triangle', 'diamond'];
+	for (let i = 0; i < count; i++) {
+		const p = document.createElement('div');
+		const type = types[Math.floor(Math.random() * types.length)];
+		const shape = shapes[Math.floor(Math.random() * shapes.length)];
+		p.className = 'particle particle--' + type;
+		const size = Math.random() * 10 + 3;
+		p.style.width = size + 'px';
+		p.style.height = size + 'px';
+		p.style.left = Math.random() * 100 + '%';
+		p.style.top = (Math.random() * 120 + 10) + '%';
+		p.style.background = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+		p.style.opacity = Math.random() * 0.3 + 0.1;
+		if (shape === 'square') {
+			p.style.borderRadius = '2px';
+		} else if (shape === 'triangle') {
+			p.style.borderRadius = '0';
+			p.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+		} else if (shape === 'diamond') {
+			p.style.borderRadius = '0';
+			p.style.clipPath = 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)';
+		}
+		const dur1 = (Math.random() * 8 + 4) + 's';
+		const dur2 = (Math.random() * 4 + 2) + 's';
+		p.style.animationDuration = type === 'twinkle' ? dur1 + ',' + dur2 : type === 'drift' ? dur1 + ',' + (Math.random() * 5 + 3) + 's' : dur1;
+		p.style.animationDelay = (Math.random() * -15) + 's';
+		container.appendChild(p);
+	}
+}
+
+// Hero particles
+createParticles('particles', 50, ['#fff', '#e8d0f0', '#d0e0f8', '#f0e0c8', '#f8e8f0', '#d0f0e8', '#c8e6c0', '#d0f0d0', '#f5e6a3', '#f0e8c0']);
+
+// Mascot particles (pastel colors matching cocome)
+createParticles('mascot-particles', 30, ['#f0c4d4', '#c9b8d9', '#a8c0e8', '#f5e6a3', '#a8d5a2', '#f8e8f0', '#e8d0f0', '#d0e0f8']);
+
+// Cocome dress-up (3 levels)
+(function cocomeClicker() {
+	const wrap = document.getElementById('cocome-wrap');
+	const accessories = wrap.querySelectorAll('.mascot-accessory');
+	let level = 0;
+	const maxLevel = 3;
+
+	// Define which accessories show at each level
+	const levels = [
+		[], // level 0: nothing
+		['mascot-accessory--bow', 'mascot-accessory--sparkle-2'], // level 1
+		['mascot-accessory--bow', 'mascot-accessory--sparkle-1', 'mascot-accessory--sparkle-2', 'mascot-accessory--heart'], // level 2
+		['mascot-accessory--crown', 'mascot-accessory--bow', 'mascot-accessory--sparkle-1', 'mascot-accessory--sparkle-2', 'mascot-accessory--sparkle-3', 'mascot-accessory--heart', 'mascot-accessory--star'] // level 3
+	];
+
+	wrap.addEventListener('click', function() {
+		level = (level + 1) % (maxLevel + 1);
+		const activeClasses = levels[level];
+
+		accessories.forEach(acc => {
+			const shouldShow = activeClasses.some(cls => acc.classList.contains(cls));
+			acc.classList.toggle('visible', shouldShow);
+		});
+	});
+})();
+
+// Language toggle (JP/EN)
+(function langToggle() {
+	const toggle = document.getElementById('langToggle');
+	const buttons = toggle.querySelectorAll('button');
+	const i18nElements = document.querySelectorAll('.i18n');
+	let currentLang = 'ja';
+
+	// Store original Japanese text
+	i18nElements.forEach(el => {
+		el.dataset.ja = el.innerHTML;
+	});
+
+	buttons.forEach(btn => {
+		btn.addEventListener('click', function() {
+			const lang = this.dataset.lang;
+			if (lang === currentLang) return;
+
+			currentLang = lang;
+			buttons.forEach(b => b.classList.remove('active'));
+			this.classList.add('active');
+
+			i18nElements.forEach(el => {
+				el.innerHTML = el.dataset[lang];
+			});
+
+			// Update html lang attribute
+			document.documentElement.lang = lang === 'ja' ? 'ja' : 'en';
+
+			// Adjust scroll if past content
+			requestAnimationFrame(() => {
+				const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+				if (window.scrollY > maxScroll) {
+					window.scrollTo(0, Math.max(0, maxScroll));
+				}
+			});
+		});
+	});
+})();
+
+// Feedback system - Supabase + localStorage
+var reactionCounts = { cute: 0, useful: 0, want: 0 };
+var votedReactions = [];
+var supabaseClient = null;
+
+// Initialize Supabase
+(function initSupabase() {
+	var config = window.COMEMO_CONFIG || {};
+	if (config.SUPABASE_URL && config.SUPABASE_ANON_KEY && window.supabase) {
+		supabaseClient = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+		console.log('Supabase connected');
+	}
+})();
+
+// Load voted status from localStorage (per-user)
+try {
+	var savedVoted = localStorage.getItem('comemo_voted');
+	if (savedVoted) votedReactions = JSON.parse(savedVoted);
+} catch(e) {}
+
+// Update display
+function updateCounts() {
+	var cute = document.getElementById('count-cute');
+	var useful = document.getElementById('count-useful');
+	var want = document.getElementById('count-want');
+	if (cute) cute.textContent = reactionCounts.cute || 0;
+	if (useful) useful.textContent = reactionCounts.useful || 0;
+	if (want) want.textContent = reactionCounts.want || 0;
+
+	// Mark voted buttons
+	document.querySelectorAll('.reaction-btn').forEach(function(btn) {
+		var type = btn.getAttribute('data-reaction');
+		if (votedReactions.indexOf(type) !== -1) {
+			btn.classList.add('voted');
+		} else {
+			btn.classList.remove('voted');
+		}
+	});
+}
+
+// Load counts from Supabase
+function loadFromSupabase() {
+	if (!supabaseClient) return;
+
+	supabaseClient
+		.from('lp_reactions')
+		.select('cute, useful, want')
+		.eq('id', 'main')
+		.single()
+		.then(function(result) {
+			if (result.data) {
+				reactionCounts.cute = result.data.cute || 0;
+				reactionCounts.useful = result.data.useful || 0;
+				reactionCounts.want = result.data.want || 0;
+				updateCounts();
+				console.log('Loaded from Supabase:', reactionCounts);
+			}
+		})
+		.catch(function(e) {
+			console.warn('Supabase load error:', e);
+		});
+}
+
+// Save to Supabase
+function saveToSupabase(type, delta) {
+	if (!supabaseClient) return;
+
+	// First get current value, then update
+	supabaseClient
+		.from('lp_reactions')
+		.select(type)
+		.eq('id', 'main')
+		.single()
+		.then(function(result) {
+			var currentVal = result.data ? (result.data[type] || 0) : 0;
+			var newVal = Math.max(0, currentVal + delta);
+			var updateObj = {};
+			updateObj[type] = newVal;
+
+			return supabaseClient
+				.from('lp_reactions')
+				.update(updateObj)
+				.eq('id', 'main');
+		})
+		.then(function() {
+			console.log('Saved to Supabase:', type, delta);
+			// Reload to get fresh data
+			loadFromSupabase();
+		})
+		.catch(function(e) {
+			console.warn('Supabase save error:', e);
+		});
+}
+
+// Initialize - load from Supabase
+updateCounts();
+loadFromSupabase();
+
+// Handle reaction click (toggle)
+function handleReaction(btn, type) {
+	var idx = votedReactions.indexOf(type);
+	var delta = 0;
+
+	if (idx !== -1) {
+		// Already voted - remove vote
+		votedReactions.splice(idx, 1);
+		delta = -1;
+		reactionCounts[type] = Math.max(0, (reactionCounts[type] || 0) - 1);
+		btn.classList.remove('voted');
+	} else {
+		// New vote - add
+		votedReactions.push(type);
+		delta = 1;
+		reactionCounts[type] = (reactionCounts[type] || 0) + 1;
+		btn.classList.add('voted');
+	}
+
+	// Save voted status to localStorage (per-user)
+	try {
+		localStorage.setItem('comemo_voted', JSON.stringify(votedReactions));
+	} catch(e) {}
+
+	// Update display immediately
+	updateCounts();
+
+	// Save to Supabase (shared)
+	saveToSupabase(type, delta);
+
+	// Visual feedback
+	btn.style.transform = 'scale(1.2)';
+	setTimeout(function() { btn.style.transform = ''; }, 200);
+}
+
+// Comment submit
+function submitFeedbackComment() {
+	var input = document.getElementById('feedbackInput');
+	var text = input.value.trim();
+	if (!text) return;
+
+	// Save to Supabase
+	if (supabaseClient) {
+		supabaseClient
+			.from('lp_comments')
+			.insert({ text: text })
+			.then(function() {
+				console.log('Comment saved');
+			})
+			.catch(function(e) {
+				console.warn('Comment save error:', e);
+			});
+	}
+
+	input.value = '';
+	alert('コメントありがとうございます！');
+}
+
+document.getElementById('feedbackSubmit').onclick = submitFeedbackComment;
+document.getElementById('feedbackInput').onkeypress = function(e) {
+	if (e.key === 'Enter') submitFeedbackComment();
+};
+
+// ZIP Download - links to dist folder
+document.getElementById('downloadZip').onclick = function(e) {
+	e.preventDefault();
+	// Direct download from dist folder
+	window.location.href = '../dist/CoMemo-v1.0.0.zip';
+};
+
+// FAQ Accordion
+document.querySelectorAll('.faq-question').forEach(function(question) {
+	question.onclick = function() {
+		var item = this.parentElement;
+		var wasOpen = item.classList.contains('open');
+
+		// Close all items
+		document.querySelectorAll('.faq-item').forEach(function(i) {
+			i.classList.remove('open');
+		});
+
+		// Open clicked item if it wasn't already open
+		if (!wasOpen) {
+			item.classList.add('open');
+		}
+	};
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,922 @@
+/* CoMemo - スタイル */
+/* @font-face は content.js から動的に注入 */
+
+/* メモコンテナ */
+#comemo-container {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+z-index: 2147483646;
+}
+
+/* メモ本体 */
+.comemo-memo {
+position: absolute;
+width: 280px;
+pointer-events: auto;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+font-size: 14px;
+}
+
+.comemo-memo-body {
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+transition: box-shadow 0.2s ease;
+}
+
+.comemo-memo:hover .comemo-memo-body {
+box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.comemo-memo.comemo-dragging {
+opacity: 0.9;
+cursor: grabbing;
+}
+
+.comemo-memo.comemo-dragging .comemo-memo-body {
+box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.comemo-memo.comemo-dragging .comemo-memo-mini-character {
+cursor: grabbing;
+}
+
+.comemo-memo.comemo-dragging .comemo-memo-mini-character img {
+transform: scale(1.02);
+filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3));
+}
+
+/* メモボディ */
+.comemo-memo-body {
+background: linear-gradient(135deg, #d4e4f7 0%, #e5dced 100%);
+border-radius: 8px;
+overflow: hidden;
+}
+
+/* メモヘッダー */
+.comemo-memo-header {
+display: flex;
+justify-content: flex-end;
+align-items: center;
+padding: 8px 12px;
+background-color: rgba(0, 0, 0, 0.08);
+cursor: grab;
+user-select: none;
+}
+
+.comemo-memo-buttons {
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.comemo-memo-share {
+width: 24px;
+height: 24px;
+border: none;
+background: rgba(0, 0, 0, 0.05);
+color: #888;
+cursor: pointer;
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: background-color 0.2s, color 0.2s;
+}
+
+.comemo-memo-share:hover {
+background-color: rgba(122, 156, 198, 0.2);
+color: #7a9cc6;
+}
+
+.comemo-memo-delete {
+width: 24px;
+height: 24px;
+border: none;
+background: rgba(0, 0, 0, 0.05);
+color: #888;
+cursor: pointer;
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: background-color 0.2s, color 0.2s;
+}
+
+.comemo-memo-delete:hover {
+background-color: rgba(229, 57, 53, 0.15);
+color: #e53935;
+}
+
+.comemo-memo-minimize {
+width: 24px;
+height: 24px;
+border: none;
+background: rgba(0, 0, 0, 0.05);
+color: #888;
+cursor: pointer;
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: background-color 0.2s, color 0.2s;
+}
+
+.comemo-memo-minimize:hover {
+background-color: rgba(168, 192, 232, 0.2);
+color: #7a9cc6;
+}
+
+/* 縮小時のキャラクター */
+.comemo-memo-mini-character {
+display: none;
+cursor: grab;
+}
+
+.comemo-memo-mini-character img {
+width: 150px;
+height: 150px;
+border-radius: 16px;
+transition: transform 0.2s, box-shadow 0.2s;
+filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+.comemo-memo-mini-character:hover img {
+transform: scale(1.05);
+filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.25));
+}
+
+/* メモ縮小状態 */
+.comemo-memo.comemo-memo-minimized {
+width: auto;
+min-width: auto;
+min-height: auto;
+background: transparent;
+box-shadow: none;
+}
+
+.comemo-memo.comemo-memo-minimized .comemo-memo-mini-character {
+display: block;
+}
+
+.comemo-memo.comemo-memo-minimized .comemo-memo-body {
+display: none;
+}
+
+/* メモ入力エリア */
+.comemo-memo-input-area {
+padding: 12px;
+}
+
+.comemo-memo-textarea {
+width: 100%;
+min-height: 80px;
+padding: 8px 10px;
+border: 1px solid rgba(0, 0, 0, 0.1);
+border-radius: 4px;
+font-size: 14px;
+font-family: inherit;
+line-height: 1.6;
+color: #333;
+background: rgba(255, 255, 255, 0.6);
+outline: none;
+resize: vertical;
+box-sizing: border-box;
+}
+
+.comemo-memo-textarea:focus {
+border-color: #a8c0e8;
+background: rgba(255, 255, 255, 0.8);
+}
+
+.comemo-memo-textarea[readonly] {
+background: transparent;
+border-color: transparent;
+resize: none;
+}
+
+.comemo-memo-submit {
+margin-top: 8px;
+padding: 6px 16px;
+background-color: #f5e6a3;
+color: #555;
+border: none;
+border-radius: 4px;
+font-size: 12px;
+font-weight: 600;
+cursor: pointer;
+transition: background-color 0.2s;
+display: block;
+margin-left: auto;
+}
+
+.comemo-memo-submit:hover {
+background-color: #e8d896;
+}
+
+/* コメントセクション */
+.comemo-comments-section {
+}
+
+/* コメントトグル */
+.comemo-comments-toggle {
+display: flex;
+align-items: center;
+gap: 6px;
+padding: 6px 12px;
+cursor: pointer;
+user-select: none;
+border-top: 1px solid rgba(0, 0, 0, 0.1);
+color: #888;
+font-size: 11px;
+transition: background-color 0.2s;
+}
+
+.comemo-comments-toggle:hover {
+background-color: rgba(0, 0, 0, 0.05);
+}
+
+.comemo-comments-toggle-arrow {
+font-size: 8px;
+}
+
+.comemo-comments-toggle-label {
+font-size: 11px;
+}
+
+/* コメント本体（折りたたみ） */
+.comemo-comments-body {
+display: none;
+background-color: rgba(255, 255, 255, 0.5);
+}
+
+.comemo-comments-body-open {
+display: block;
+}
+
+.comemo-comments-list {
+max-height: 150px;
+overflow-y: auto;
+}
+
+.comemo-comment {
+padding: 8px 12px;
+border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+font-size: 13px;
+}
+
+.comemo-comment:last-child {
+border-bottom: none;
+}
+
+
+.comemo-comment-content {
+color: #666;
+font-size: 12px;
+}
+
+/* コメント入力エリア */
+.comemo-comment-area {
+padding: 8px;
+background-color: rgba(255, 255, 255, 0.3);
+}
+
+
+.comemo-comment-input-container {
+display: flex;
+gap: 8px;
+}
+
+.comemo-comment-input {
+flex: 1;
+padding: 6px 10px;
+border: 1px solid rgba(0, 0, 0, 0.1);
+border-radius: 4px;
+font-size: 12px;
+outline: none;
+background: white;
+}
+
+.comemo-comment-input:focus {
+border-color: #a8c0e8;
+}
+
+.comemo-comment-submit {
+padding: 6px 12px;
+background-color: #f5e6a3;
+color: #555;
+border: none;
+border-radius: 4px;
+font-size: 11px;
+font-weight: 600;
+cursor: pointer;
+transition: background-color 0.2s;
+}
+
+.comemo-comment-submit:hover {
+background-color: #e8d896;
+}
+
+/* 通知 */
+.comemo-notification {
+position: fixed;
+top: 20px;
+left: 50%;
+transform: translateX(-50%) translateY(-100px);
+background-color: #333;
+color: white;
+padding: 12px 24px;
+border-radius: 8px;
+font-size: 14px;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+z-index: 2147483647;
+pointer-events: auto;
+opacity: 0;
+transition: transform 0.3s ease, opacity 0.3s ease;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.comemo-notification-show {
+transform: translateX(-50%) translateY(0);
+opacity: 1;
+}
+
+/* カラーバリエーション */
+.comemo-memo[data-color="default"] .comemo-memo-body {
+background: linear-gradient(135deg, #d4e4f7 0%, #e5dced 100%);
+}
+
+.comemo-memo[data-color="yellow"] .comemo-memo-body {
+background: linear-gradient(135deg, #f5e6a3 0%, #efe0c0 100%);
+}
+
+.comemo-memo[data-color="green"] .comemo-memo-body {
+background: linear-gradient(135deg, #a8d5a2 0%, #c5e6c0 100%);
+}
+
+.comemo-memo[data-color="blue"] .comemo-memo-body {
+background: linear-gradient(135deg, #a8c0e8 0%, #c5d8f0 100%);
+}
+
+.comemo-memo[data-color="pink"] .comemo-memo-body {
+background: linear-gradient(135deg, #f0c4d4 0%, #f5d8e4 100%);
+}
+
+.comemo-memo[data-color="purple"] .comemo-memo-body {
+background: linear-gradient(135deg, #c9b8d9 0%, #ddd0e8 100%);
+}
+
+.comemo-memo[data-color="orange"] .comemo-memo-body {
+background: linear-gradient(135deg, #f5d4a3 0%, #f0e0c5 100%);
+}
+
+/* スクロールバー */
+.comemo-comments-list::-webkit-scrollbar {
+width: 6px;
+}
+
+.comemo-comments-list::-webkit-scrollbar-track {
+background: transparent;
+}
+
+.comemo-comments-list::-webkit-scrollbar-thumb {
+background-color: rgba(0, 0, 0, 0.2);
+border-radius: 3px;
+}
+
+.comemo-comments-list::-webkit-scrollbar-thumb:hover {
+background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* フローティングパネル */
+#comemo-panel {
+position: fixed;
+top: 20px;
+right: 20px;
+width: 300px;
+background: linear-gradient(135deg, #a8c0e8 0%, #c9b8d9 100%);
+border-radius: 12px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+font-size: 14px;
+z-index: 2147483647;
+pointer-events: auto;
+opacity: 0;
+transform: translateY(-20px);
+transition: opacity 0.3s ease, transform 0.3s ease;
+visibility: hidden;
+}
+
+#comemo-panel.comemo-panel-show {
+opacity: 1;
+transform: translateY(0);
+visibility: visible;
+}
+
+.comemo-panel-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px 16px;
+background: rgba(0, 0, 0, 0.1);
+border-radius: 12px 12px 0 0;
+cursor: grab;
+}
+
+.comemo-panel-header:active {
+cursor: grabbing;
+}
+
+.comemo-panel-title-wrapper {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.comemo-panel-logo {
+width: 32px;
+height: 32px;
+border-radius: 6px;
+}
+
+.comemo-panel-title {
+font-size: 16px;
+font-weight: 700;
+color: #444;
+font-family: 'Oooh Baby', cursive;
+}
+
+.comemo-panel-header-buttons {
+display: flex;
+gap: 4px;
+}
+
+.comemo-panel-minimize,
+.comemo-panel-close {
+width: 28px;
+height: 28px;
+border: none;
+background: rgba(0, 0, 0, 0.1);
+color: #555;
+font-size: 18px;
+cursor: pointer;
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: background-color 0.2s;
+}
+
+.comemo-panel-minimize:hover,
+.comemo-panel-close:hover {
+background: rgba(0, 0, 0, 0.2);
+}
+
+/* 縮小状態 */
+#comemo-panel.comemo-panel-minimized .comemo-panel-body {
+display: none;
+}
+
+#comemo-panel.comemo-panel-minimized {
+width: auto;
+min-width: 120px;
+}
+
+#comemo-panel.comemo-panel-minimized .comemo-panel-header {
+gap: 8px;
+border-radius: 12px;
+}
+
+.comemo-panel-body {
+padding: 16px;
+}
+
+.comemo-panel-status {
+background: rgba(255, 255, 255, 0.4);
+border-radius: 8px;
+padding: 12px;
+margin-bottom: 16px;
+text-align: center;
+}
+
+.comemo-panel-count {
+display: block;
+font-size: 32px;
+font-weight: 700;
+color: #444;
+}
+
+.comemo-panel-label {
+font-size: 12px;
+color: #666;
+}
+
+.comemo-panel-section {
+margin-bottom: 16px;
+}
+
+.comemo-panel-input-label {
+font-size: 12px;
+color: #555;
+margin-bottom: 6px;
+display: block;
+}
+
+.comemo-panel-input {
+width: 100%;
+padding: 10px 12px;
+border: none;
+border-radius: 6px;
+font-size: 14px;
+background: rgba(255, 255, 255, 0.9);
+color: #333;
+outline: none;
+box-sizing: border-box;
+}
+
+.comemo-panel-input:focus {
+box-shadow: 0 0 0 2px rgba(168, 192, 232, 0.5);
+}
+
+
+.comemo-panel-buttons {
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.comemo-panel-btn {
+width: 100%;
+padding: 12px;
+border: none;
+border-radius: 8px;
+font-size: 14px;
+font-weight: 600;
+cursor: pointer;
+transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.comemo-panel-btn:hover {
+transform: translateY(-1px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.comemo-panel-btn:active {
+transform: translateY(0);
+}
+
+.comemo-panel-btn-primary {
+background: #f5e6a3;
+color: #555;
+}
+
+.comemo-panel-btn-secondary {
+background: rgba(255, 255, 255, 0.5);
+color: #555;
+}
+
+.comemo-panel-btn-danger {
+background: rgba(230, 180, 180, 0.6);
+color: #666;
+}
+
+/* 描画ツールバー */
+.comemo-drawing-toolbar {
+display: flex;
+align-items: center;
+gap: 6px;
+padding: 8px;
+background: rgba(255, 255, 255, 0.4);
+border-radius: 6px;
+}
+
+.comemo-drawing-tool {
+width: 36px;
+height: 36px;
+border: none;
+background: rgba(255, 255, 255, 0.6);
+border-radius: 6px;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+color: #555;
+transition: all 0.2s;
+}
+
+.comemo-drawing-tool:hover {
+background: rgba(255, 255, 255, 0.9);
+color: #333;
+}
+
+.comemo-drawing-tool-active {
+background: #a8c0e8 !important;
+color: #fff !important;
+box-shadow: 0 2px 8px rgba(168, 192, 232, 0.5);
+}
+
+.comemo-drawing-divider {
+width: 1px;
+height: 24px;
+background: rgba(0, 0, 0, 0.15);
+margin: 0 4px;
+}
+
+.comemo-color-picker {
+display: flex;
+gap: 4px;
+}
+
+.comemo-color-btn {
+width: 24px;
+height: 24px;
+border: 2px solid transparent;
+border-radius: 50%;
+cursor: pointer;
+transition: transform 0.2s, border-color 0.2s;
+}
+
+.comemo-color-btn:hover {
+transform: scale(1.1);
+}
+
+.comemo-color-btn-active {
+border-color: #fff;
+box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* スクリーンショットツールバー */
+.comemo-screenshot-toolbar {
+display: flex;
+gap: 6px;
+}
+
+.comemo-panel-btn-ss {
+flex: 1;
+padding: 8px 6px !important;
+background: rgba(245, 200, 160, 0.85) !important;
+color: #6b4c2a !important;
+font-size: 12px !important;
+font-weight: 600;
+border: none;
+border-radius: 6px;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.comemo-panel-btn-ss:hover {
+background: rgba(235, 180, 135, 0.95) !important;
+}
+
+.comemo-panel-btn-ss:disabled {
+opacity: 0.5;
+cursor: wait;
+}
+
+/* SVGコンテナ - 空の部分はクリックスルー */
+.comemo-svg-container {
+pointer-events: none;
+}
+
+/* 図形共通 - 図形自体はクリック可能 */
+.comemo-shape {
+cursor: move;
+pointer-events: all !important;
+transition: opacity 0.2s, filter 0.2s;
+}
+
+.comemo-shape * {
+pointer-events: all !important;
+}
+
+.comemo-shape:hover {
+filter: brightness(1.2) drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
+}
+
+.comemo-shape-selected {
+filter: brightness(1.2) drop-shadow(0 0 6px rgba(229, 57, 53, 0.6));
+}
+
+/* プレビュー図形 */
+.comemo-shape-preview {
+opacity: 0.6;
+}
+
+/* ドラッグ中の図形 */
+.comemo-shape-dragging {
+opacity: 0.7;
+}
+
+/* リサイズハンドル - デフォルト非表示 */
+.comemo-resize-handle {
+opacity: 0;
+pointer-events: none !important;
+transition: opacity 0.15s ease;
+}
+
+/* 選択中の図形のみハンドル表示 */
+.comemo-shape-selected .comemo-resize-handle {
+opacity: 1;
+pointer-events: all !important;
+}
+
+/* ハンドルホバー */
+.comemo-resize-handle:hover {
+filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4));
+}
+
+/* スマホ・小画面対応 */
+@media (max-width: 480px) {
+#comemo-panel {
+	top: 8px;
+	right: 8px;
+	left: auto;
+	width: 190px;
+	border-radius: 8px;
+	font-size: 10px;
+}
+
+.comemo-panel-header {
+	padding: 6px 8px;
+	border-radius: 8px 8px 0 0;
+}
+
+.comemo-panel-logo {
+	width: 18px;
+	height: 18px;
+	border-radius: 3px;
+}
+
+.comemo-panel-title {
+	font-size: 11px;
+}
+
+.comemo-panel-title-wrapper {
+	gap: 4px;
+}
+
+.comemo-panel-minimize,
+.comemo-panel-close {
+	width: 20px;
+	height: 20px;
+	font-size: 12px;
+}
+
+.comemo-panel-header-buttons {
+	gap: 2px;
+}
+
+.comemo-panel-body {
+	padding: 6px;
+}
+
+.comemo-panel-status {
+	padding: 4px 6px;
+	margin-bottom: 6px;
+	border-radius: 4px;
+}
+
+.comemo-panel-count {
+	font-size: 14px;
+	display: inline;
+}
+
+.comemo-panel-label {
+	font-size: 9px;
+	display: inline;
+	margin-left: 4px;
+}
+
+.comemo-panel-section {
+	margin-bottom: 6px;
+}
+
+.comemo-panel-input-label {
+	font-size: 9px;
+	margin-bottom: 3px;
+}
+
+.comemo-drawing-toolbar {
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: 4px;
+	padding: 6px;
+	border-radius: 4px;
+}
+
+/* 図形ツール上段・色下段の縦配置 */
+.comemo-drawing-divider {
+	display: none;
+}
+
+.comemo-color-picker {
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+	gap: 4px;
+	margin-top: 2px;
+}
+
+.comemo-drawing-tool {
+	width: 24px !important;
+	height: 24px !important;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+
+.comemo-drawing-tool svg {
+	width: 12px;
+	height: 12px;
+}
+
+.comemo-color-btn {
+	width: 14px !important;
+	height: 14px !important;
+	border-width: 1.5px;
+	flex-shrink: 0;
+	box-sizing: border-box;
+}
+
+.comemo-screenshot-toolbar {
+	gap: 4px;
+}
+
+.comemo-panel-btn-ss {
+	padding: 5px 4px !important;
+	font-size: 9px !important;
+	border-radius: 10px;
+	background: linear-gradient(135deg, rgba(245, 200, 160, 0.9), rgba(235, 180, 135, 0.9)) !important;
+	color: #6b4c2a !important;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.comemo-panel-btn-ss:hover {
+	box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.comemo-panel-buttons {
+	gap: 4px;
+}
+
+.comemo-panel-btn {
+	padding: 5px 4px !important;
+	font-size: 9px !important;
+	border-radius: 4px;
+}
+
+.comemo-memo {
+	width: 220px;
+	font-size: 12px;
+}
+
+.comemo-memo-textarea {
+	min-height: 60px;
+	font-size: 12px;
+}
+
+.comemo-memo-input-area {
+	padding: 8px;
+}
+
+.comemo-memo-submit {
+	padding: 4px 10px;
+	font-size: 10px;
+}
+
+#comemo-panel.comemo-panel-minimized {
+	min-width: 80px;
+}
+
+}
+
+/* タッチデバイス用の改善（大画面タブレット向け） */
+@media (pointer: coarse) and (min-width: 481px) {
+.comemo-drawing-tool {
+	width: 44px;
+	height: 44px;
+}
+
+.comemo-color-btn {
+	width: 30px;
+	height: 30px;
+}
+
+.comemo-comment-submit {
+	padding: 8px 16px;
+	font-size: 13px;
+}
+
+.comemo-panel-btn {
+	padding: 14px 16px;
+}
+}
+
+/* タッチデバイス共通 */
+@media (pointer: coarse) {
+.comemo-resize-handle {
+	r: 10;
+}
+}

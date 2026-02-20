@@ -1,0 +1,15 @@
+# CoMemo .gitignore
+
+# Supabase credentials (use config.example.js as template)
+src/js/config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
